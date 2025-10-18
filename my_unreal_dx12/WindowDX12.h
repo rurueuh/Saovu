@@ -45,7 +45,7 @@ public:
         m_camController.SetPosition({ 0,0,-5 });
         m_camController.SetYawPitch(0.0f, 0.0f);
         m_camController.SetProj(DirectX::XM_PIDIV4, 0.1f, 100.0f);
-
+        WindowDX12::m_whiteTex.InitWhite1x1(m_gfx);
 #if _DEBUG
         if (Microsoft::WRL::ComPtr<ID3D12Debug> dbg; SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg))))
             dbg->EnableDebugLayer();
@@ -56,6 +56,10 @@ public:
         static WindowDX12 instance(1280, 720, L"DX12 Window");
         return instance;
     }
+    
+    Texture &getDefaultTexture(void) {
+		return m_whiteTex;
+	}
 
     static void setWindowTitle(const std::wstring& title) {
         Get().m_window.SetTitle(title);
@@ -136,6 +140,7 @@ public:
         freopen_s(&fp, "CONOUT$", "w", stderr);
     }
 
+    inline static Texture  m_whiteTex;
 private:
     static constexpr UINT kMaxDrawsPerFrame = 19000;
 

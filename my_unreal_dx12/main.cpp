@@ -36,72 +36,25 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     WindowDX12::ActivateConsole();
 	auto& win = WindowDX12::Get();
 	win.setWindowTitle(L"My ruru");
-
-    std::vector<Vertex> verticesCube = {
-        // Face avant (z = +1)
-        {-1,-1, 1, 1,0,0, 0,1},
-        {-1, 1, 1, 0,1,0, 0,0},
-        { 1, 1, 1, 0,0,1, 1,0},
-        { 1,-1, 1, 1,1,0, 1,1},
-
-        // Face arrière (z = -1)
-        { 1,-1,-1, 1,0,1, 0,1},
-        { 1, 1,-1, 0,1,1, 0,0},
-        {-1, 1,-1, 1,1,1, 1,0},
-        {-1,-1,-1, 0.2f,0.7f,1, 1,1},
-
-        // Face gauche (x = -1)
-        {-1,-1,-1, 1,0,0, 0,1},
-        {-1, 1,-1, 0,1,0, 0,0},
-        {-1, 1, 1, 0,0,1, 1,0},
-        {-1,-1, 1, 1,1,0, 1,1},
-
-        // Face droite (x = +1)
-        { 1,-1, 1, 1,0,1, 0,1},
-        { 1, 1, 1, 0,1,1, 0,0},
-        { 1, 1,-1, 1,1,1, 1,0},
-        { 1,-1,-1, 0.2f,0.7f,1, 1,1},
-
-        // Face haut (y = +1)
-        {-1, 1, 1, 1,0,0, 0,1},
-        {-1, 1,-1, 0,1,0, 0,0},
-        { 1, 1,-1, 0,0,1, 1,0},
-        { 1, 1, 1, 1,1,0, 1,1},
-
-        // Face bas (y = -1)
-        {-1,-1,-1, 1,0,1, 0,1},
-        {-1,-1, 1, 0,1,1, 0,0},
-        { 1,-1, 1, 1,1,1, 1,0},
-        { 1,-1,-1, 0.2f,0.7f,1, 1,1},
-    };
-
-    std::vector<uint16_t> indicesCube = {
-        0,1,2, 0,2,3,      // front
-        4,5,6, 4,6,7,      // back
-        8,9,10, 8,10,11,   // left
-        12,13,14, 12,14,15,// right
-        16,17,18, 16,18,19,// top
-        20,21,22, 20,22,23 // bottom
-    };
-
-
+	srand(static_cast<unsigned int>(time(nullptr)));
     std::vector<Mesh> cubes;
 	int numCubes = 100;
 	Texture tex;
-	tex.LoadFromFile(win.GetGraphicsDevice(), "cup.jpg");
     Texture dirt;
+	tex.LoadFromFile(win.GetGraphicsDevice(), "cup.jpg");
 	dirt.LoadFromFile(win.GetGraphicsDevice(), "dirt.jpg");
-	Mesh cubeMesh;
-	cubeMesh = cubeMesh.objLoader("teapot.txt");
-	cubeMesh.m_tex = tex;
+
+	Mesh cubeMesh("teapot.txt");
+	cubeMesh.SetTexture(&dirt);
+	cubeMesh.setColor(1.0f, 1.0f, 0.0f);
     while (numCubes--) {
-		Mesh cube = cubeMesh;
-		cube = cube.objLoader("cube.txt");
-        cube.m_tex = dirt;
-        //cube.Upload(win.GetDevice(), verticesCube, indicesCube);
+		Mesh cube("cube.txt");
         cube.SetPosition(((rand() % 100) / 100.f - 0.5f) * 50.f,
                          ((rand() % 100) / 100.f - 0.5f) * 50.f,
 			((rand() % 100) / 100.f - 0.5f) * 50.f);
+        cube.setColor((rand() % 100) / 100.f,
+                      (rand() % 100) / 100.f,
+			          (rand() % 100) / 100.f);
 		cubes.push_back(cube);
     }
 

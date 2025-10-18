@@ -10,13 +10,11 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& ind
 	std::cout << "Mesh created with " << indices.size() / 3 << " triangles.\n";
 }
 
-Mesh Mesh::objLoader(const std::string& filename)
+Mesh::Mesh(const std::string& filename)
 {
-    Mesh mesh;
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Erreur: impossible d’ouvrir " << filename << std::endl;
-        return mesh;
     }
 
     std::vector<DirectX::XMFLOAT3> positions;
@@ -66,73 +64,96 @@ Mesh Mesh::objLoader(const std::string& filename)
                     vert.py = p.y;
                     vert.pz = p.z;
 
-                    vert.r = fmod(std::abs(p.x), 1.0f);
-                    vert.g = fmod(std::abs(p.y), 1.0f);
-                    vert.b = fmod(std::abs(p.z), 1.0f);
-
-					vert.r = 1.0f;
-					vert.g = 1.0f;
-					vert.b = 1.0f;
+                    vert.r = 1.0f;
+                    vert.g = 1.0f;
+                    vert.b = 1.0f;
 
                     if (ti > 0) {
                         auto& t = texcoords[ti - 1];
                         vert.u = t.x;
                         vert.v = 1.0f - t.y;
-					}
+                    }
 
-                    vertices.push_back(vert);
+                    m_vertices.push_back(vert);
                     vertexMap[vtx[i]] = nextIndex++;
                 }
-                indices.push_back(vertexMap[vtx[i]]);
+                m_indices.push_back(vertexMap[vtx[i]]);
             }
         }
     }
 
-    mesh.Upload(nullptr, vertices, indices);
-    std::cout << "OBJ chargé: " << vertices.size() << " sommets, " << indices.size() / 3 << " faces." << std::endl;
-    return mesh;
+    this->Upload(nullptr, m_vertices, m_indices);
+    std::cout << "OBJ chargé: " << m_vertices.size() << " sommets, " << m_indices.size() / 3 << " faces." << std::endl;
 }
 
-void Mesh::Upload(ID3D12Device* device, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices)
+void Mesh::Upload(ID3D12Device* device,
+    const std::vector<Vertex>& vertices,
+    const std::vector<uint16_t>& indices,
+    ID3D12Fence* fence, UINT64 fenceValue)
 {
-	if (!device)
-		device = WindowDX12::Get().GetDevice();
-	D3D12_HEAP_PROPERTIES uploadHeap{}; uploadHeap.Type = D3D12_HEAP_TYPE_UPLOAD;
-	D3D12_RESOURCE_DESC vbDesc{}; vbDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vbDesc.Width = UINT(vertices.size() * sizeof(Vertex));
-	vbDesc.Height = 1;
-	vbDesc.DepthOrArraySize = 1;
-	vbDesc.MipLevels = 1;
-	vbDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	vbDesc.SampleDesc = { 1,0 };
+    if (!device) device = WindowDX12::Get().GetDevice();
 
-	DXThrow(device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &vbDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_vb)));
-	{
-		void* map = nullptr;
-		D3D12_RANGE r{ 0,0 };
-		m_vb->Map(0, &r, &map);
-		memcpy(map, vertices.data(), vertices.size() * sizeof(Vertex));
-		m_vb->Unmap(0, nullptr);
-	}
-	m_vbv.BufferLocation = m_vb->GetGPUVirtualAddress();
-	m_vbv.StrideInBytes = sizeof(Vertex);
-	m_vbv.SizeInBytes = UINT(vertices.size() * sizeof(Vertex));
+	m_vertices = vertices;
+	m_indices = indices;
 
+    if (fence && fence->GetCompletedValue() < fenceValue) {
+        HANDLE e = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        fence->SetEventOnCompletion(fenceValue, e);
+    }
 
-	D3D12_RESOURCE_DESC ibDesc = vbDesc;
-	ibDesc.Width = UINT(indices.size() * sizeof(uint16_t));
-	DXThrow(device->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &ibDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_ib)));
-	{
-		void* map = nullptr;
-		D3D12_RANGE r{ 0,0 };
-		m_ib->Map(0, &r, &map);
-		memcpy(map, indices.data(), indices.size() * sizeof(uint16_t));
-		m_ib->Unmap(0, nullptr);
-	}
-	m_ibv.BufferLocation = m_ib->GetGPUVirtualAddress();
-	m_ibv.Format = DXGI_FORMAT_R16_UINT;
-	m_ibv.SizeInBytes = UINT(indices.size() * sizeof(uint16_t));
+    const UINT vbBytesReal = UINT(vertices.size() * sizeof(Vertex));
+    const UINT ibBytesReal = UINT(indices.size() * sizeof(uint16_t));
+    const UINT vbBytes = std::max<UINT>(vbBytesReal, 1u);
+    const UINT ibBytes = std::max<UINT>(ibBytesReal, 1u);
 
+    auto makeOrResize = [&](ComPtr<ID3D12Resource>& res, UINT bytes) {
+        if (res && res->GetDesc().Width >= bytes) return;
+        D3D12_HEAP_PROPERTIES hp{}; hp.Type = D3D12_HEAP_TYPE_UPLOAD;
+        D3D12_RESOURCE_DESC rd{}; rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        rd.Width = bytes; rd.Height = 1; rd.DepthOrArraySize = 1; rd.MipLevels = 1;
+        rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; rd.SampleDesc = { 1,0 };
+        DXThrow(device->CreateCommittedResource(&hp, D3D12_HEAP_FLAG_NONE, &rd,
+            D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&res)));
+        };
 
-	m_indexCount = UINT(indices.size());
+    makeOrResize(m_vb, vbBytes);
+    makeOrResize(m_ib, ibBytes);
+
+    if (vbBytesReal) {
+        void* p = nullptr; D3D12_RANGE rr{ 0,0 };
+        m_vb->Map(0, &rr, &p);
+        memcpy(p, vertices.data(), vbBytesReal);
+        D3D12_RANGE wr{ 0, vbBytesReal }; m_vb->Unmap(0, &wr);
+    }
+    if (ibBytesReal) {
+        void* p = nullptr; D3D12_RANGE rr{ 0,0 };
+        m_ib->Map(0, &rr, &p);
+        memcpy(p, indices.data(), ibBytesReal);
+        D3D12_RANGE wr{ 0, ibBytesReal }; m_ib->Unmap(0, &wr);
+    }
+
+    m_vbv.BufferLocation = m_vb->GetGPUVirtualAddress();
+    m_vbv.StrideInBytes = sizeof(Vertex);
+    m_vbv.SizeInBytes = vbBytesReal;
+
+    m_ibv.BufferLocation = m_ib->GetGPUVirtualAddress();
+    m_ibv.Format = DXGI_FORMAT_R16_UINT;
+    m_ibv.SizeInBytes = ibBytesReal;
+
+    m_indexCount = UINT(indices.size());
+}
+
+void Mesh::BindTexture(ID3D12GraphicsCommandList* cmdList, UINT rootParamIndex) const {
+    Texture* tx = m_texture ? m_texture : m_defaultWhite;
+    std::wcout << L"Binding texture with GPU handle: " << m_defaultWhite << L"\n";
+    if (m_texture == nullptr)
+        printf("%p\n", m_texture);
+    if (m_defaultWhite == nullptr) {
+        auto window = WindowDX12::Get();
+        m_defaultWhite = &window.getDefaultTexture();
+    }
+    if (!tx) return;
+    ID3D12DescriptorHeap* heaps[] = { tx->SRVHeap() };
+    cmdList->SetDescriptorHeaps(1, heaps);
+    cmdList->SetGraphicsRootDescriptorTable(rootParamIndex, tx->GPUHandle());
 }

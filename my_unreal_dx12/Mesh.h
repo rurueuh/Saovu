@@ -15,37 +15,19 @@ class WindowsDX12;
 class Mesh
 {
 public:
-	Mesh() = default;
+	Mesh() = delete;
 	Mesh(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
+	Mesh(const std::string& filename);
 
-    Mesh objLoader(const std::string& filename);
+	void Upload(ID3D12Device* device, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, ID3D12Fence* fence = nullptr, UINT64 fenceValue = 0);
 
-	void Upload(ID3D12Device* device, const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
+	void SetTexture(Texture* tex) { m_texture = tex; }
 
-	void SetTexture(ID3D12Device* device, ID3D12DescriptorHeap* srvHeap, UINT heapIndex, ID3D12Resource* texture)
-	{
-		m_texture = texture;
+	Texture* GetTexture() const { return m_texture ? m_texture : m_defaultWhite; }
 
-		D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
-		srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srv.Format = m_texture->GetDesc().Format;
-		srv.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srv.Texture2D.MipLevels = m_texture->GetDesc().MipLevels;
+	void SetDefaultTexture(Texture* texWhite) { m_defaultWhite = texWhite; }
 
-		auto cpuStart = srvHeap->GetCPUDescriptorHandleForHeapStart();
-		auto inc = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ cpuStart.ptr + heapIndex * inc };
-		device->CreateShaderResourceView(m_texture.Get(), &srv, cpuHandle);
-
-		auto gpuStart = srvHeap->GetGPUDescriptorHandleForHeapStart();
-		m_texGpuHandle = { gpuStart.ptr + heapIndex * inc };
-	}
-
-	void BindTexture(ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT rootParamIndex/*=table t0*/) {
-		ID3D12DescriptorHeap* heaps[] = { srvHeap };
-		cmdList->SetDescriptorHeaps(1, heaps);
-		cmdList->SetGraphicsRootDescriptorTable(rootParamIndex, m_texGpuHandle);
-	}
+	void BindTexture(ID3D12GraphicsCommandList* cmdList, UINT rootParamIndex) const;
 
 	void SetPosition(float x, float y, float z)
 	{
@@ -90,6 +72,24 @@ public:
 		m_transform.r[2] = DirectX::XMVectorAdd(m_transform.r[2], DirectX::XMVectorSet(0, 0, dsz, 0));
 	}
 	const DirectX::XMMATRIX& Transform() const { return m_transform; }
+	void setColor(float r, float g, float b)
+	{
+		for (auto& v : m_vertices)
+		{
+			v.r = r;
+			v.g = g;
+			v.b = b;
+		}
+		this->Upload(nullptr, m_vertices, m_indices);
+	}
+	std::tuple<float, float, float> getColor() const
+	{
+		Vertex v{};
+		D3D12_RANGE readRange{ 0, sizeof(Vertex) };
+		m_vb->Map(0, &readRange, reinterpret_cast<void**>(&v));
+		m_vb->Unmap(0, nullptr);
+		return { v.r, v.g, v.b };
+	}
 
 
 	const D3D12_VERTEX_BUFFER_VIEW& VBV() const { return m_vbv; }
@@ -97,15 +97,18 @@ public:
 	UINT IndexCount() const { return m_indexCount; }
 
 
-	Texture m_tex;
-private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_vb, m_ib;
+private:
 	D3D12_VERTEX_BUFFER_VIEW m_vbv{};
 	D3D12_INDEX_BUFFER_VIEW m_ibv{};
 	DirectX::XMMATRIX m_transform{ DirectX::XMMatrixIdentity() };
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> m_texture;
+	Texture* m_texture = nullptr;
+	mutable Texture* m_defaultWhite = nullptr;
 	D3D12_GPU_DESCRIPTOR_HANDLE m_texGpuHandle{ 0 };
 
+	std::vector<Vertex> m_vertices;
+	std::vector<uint16_t> m_indices;
+	
 	UINT m_indexCount = 0;
 };

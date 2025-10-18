@@ -7,6 +7,7 @@
 #include <exception>
 #include "GraphicsDevice.h"
 
+
 using Microsoft::WRL::ComPtr;
 
 class GraphicsDevice;
@@ -14,6 +15,7 @@ class GraphicsDevice;
 class Texture {
 public:
     void LoadFromFile(GraphicsDevice &gd, const char* path);
+    Texture InitWhite1x1(GraphicsDevice& gd);
 
     ID3D12DescriptorHeap* SRVHeap() const { return m_srvHeap.Get(); }
     D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle() const { return m_srvHeap->GetGPUDescriptorHandleForHeapStart(); }

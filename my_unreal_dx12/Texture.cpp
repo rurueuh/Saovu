@@ -90,3 +90,9 @@ void Texture::LoadFromFile(GraphicsDevice& gd, const char* path)
     device->CreateShaderResourceView(m_tex.Get(), &srv, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
 #endif
 }
+
+Texture Texture::InitWhite1x1(GraphicsDevice& gd) {
+    this->LoadFromFile(gd, "white.jpg");
+
+	return *this;
+}
