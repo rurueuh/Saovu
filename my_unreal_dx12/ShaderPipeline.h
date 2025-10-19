@@ -35,10 +35,17 @@ public:
 
         D3D12_STATIC_SAMPLER_DESC samp{};
         samp.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        samp.AddressU = samp.AddressV = samp.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-        samp.ShaderRegister = 0; // s0
-        samp.RegisterSpace = 0;
+        samp.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samp.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samp.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        samp.MipLODBias = 0.0f;
+        samp.MaxAnisotropy = 1;
+        samp.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        samp.MinLOD = 0.0f;
+        samp.MaxLOD = D3D12_FLOAT32_MAX;
         samp.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        samp.RegisterSpace = 0;
+        samp.ShaderRegister = 0; // s0
 
         D3D12_ROOT_SIGNATURE_DESC rsDesc{};
         rsDesc.NumParameters = 2;

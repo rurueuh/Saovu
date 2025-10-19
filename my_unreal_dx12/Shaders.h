@@ -28,11 +28,9 @@ static const char* kPixelShaderSrc = R"(
 Texture2D    uTexture : register(t0);
 SamplerState uSampler : register(s0);
 
-float4 main(float4 pos : SV_Position, float3 col : COLOR0, float2 uv : TEXCOORD0) : SV_Target
+float4 main(float4 pos:SV_Position, float3 col:COLOR0, float2 uv:TEXCOORD0) : SV_Target
 {
-    float2 uvFix = float2(1-uv.x, uv.y);
-    float4 texColor = uTexture.Sample(uSampler, uvFix);
-    //texColor = float4(1,1,1,1);
+    float4 texColor = uTexture.Sample(uSampler, uv);
     return texColor * float4(col, 1);
 }
 )";

@@ -5,10 +5,15 @@
 #include <cstdint>
 #include <DirectXMath.h>
 #include <string>
+#include <unordered_map>
 #include "Texture.h"
 #include "Utils.h"
 
 struct Vertex { float px, py, pz; float r, g, b; float u, v; };
+struct Material {
+	DirectX::XMFLOAT3 Kd{ 1,1,1 };
+	std::string map_Kd;
+};
 
 class WindowsDX12;
 
@@ -111,4 +116,8 @@ private:
 	std::vector<uint16_t> m_indices;
 	
 	UINT m_indexCount = 0;
+	std::unordered_map<std::string, Material> m_materials;
+	Texture m_localTexture;
+	bool m_hasLocalTexture = false;
+	std::wstring m_baseDirW;
 };
