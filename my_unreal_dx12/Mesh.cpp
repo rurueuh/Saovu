@@ -1,7 +1,7 @@
 ﻿#include "Mesh.h"
 #include "WindowDX12.h"
 
-Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices) {
+Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) {
     m_asset = std::make_shared<MeshAsset>();
     m_asset->vertices = vertices;
     m_asset->indices = indices;

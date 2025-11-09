@@ -59,10 +59,10 @@ static void parseVtxToken(const std::string& tok, int& vi, int& ti, int& ni) {
     flush();
 }
 
-static uint16_t getIndexForKey(
+static uint32_t getIndexForKey(
     const std::string& key,
-    std::unordered_map<std::string, uint16_t>& map,
-    uint16_t& next,
+    std::unordered_map<std::string, uint32_t>& map,
+    uint32_t& next,
     std::vector<Vertex>& outVertices,
     const std::vector<DirectX::XMFLOAT3>& positions,
     const std::vector<DirectX::XMFLOAT2>& texcoords,
@@ -99,7 +99,7 @@ static uint16_t getIndexForKey(
 }
 
 static void RecomputeSmoothNormals(std::vector<Vertex>& verts,
-    const std::vector<uint16_t>& idx)
+    const std::vector<uint32_t>& idx)
 {
     for (auto& v : verts) { v.nx = v.ny = v.nz = 0.0f; }
 
@@ -148,8 +148,8 @@ void LoadOBJIntoAsset(const std::string& filename, MeshAsset& out, std::shared_p
     std::vector<DirectX::XMFLOAT2> texcoords;
     std::unordered_map<std::string, Material> materials;
 
-    std::unordered_map<std::string, uint16_t> vertexMap;
-    uint16_t nextIndex = 0;
+    std::unordered_map<std::string, uint32_t> vertexMap;
+    uint32_t nextIndex = 0;
 
     std::string line;
     while (std::getline(file, line)) {
@@ -178,10 +178,10 @@ void LoadOBJIntoAsset(const std::string& filename, MeshAsset& out, std::shared_p
             while (iss >> tok) toks.push_back(tok);
             if (toks.size() < 3) continue;
 
-            std::vector<uint16_t> faceIdx;
+            std::vector<uint32_t> faceIdx;
             faceIdx.reserve(toks.size());
             for (auto& t : toks) {
-                uint16_t idx = getIndexForKey(t, vertexMap, nextIndex, out.vertices, positions, texcoords, normals);
+                uint32_t idx = getIndexForKey(t, vertexMap, nextIndex, out.vertices, positions, texcoords, normals);
                 faceIdx.push_back(idx);
             }
             for (size_t i = 2; i < faceIdx.size(); ++i) {

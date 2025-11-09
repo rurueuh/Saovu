@@ -6,7 +6,7 @@ void MeshAsset::Upload(ID3D12Device* device) {
     if (!device) device = WindowDX12::Get().GetDevice();
 
     const UINT vbBytes = UINT(vertices.size() * sizeof(Vertex));
-    const UINT ibBytes = UINT(indices.size() * sizeof(uint16_t));
+    const UINT ibBytes = UINT(indices.size() * sizeof(uint32_t));
 
     auto makeBuf = [&](Microsoft::WRL::ComPtr<ID3D12Resource>& res, UINT bytes) {
         if (res && res->GetDesc().Width >= bytes) return;
@@ -39,7 +39,7 @@ void MeshAsset::Upload(ID3D12Device* device) {
     vbv.SizeInBytes = vbBytes;
 
     ibv.BufferLocation = ib->GetGPUVirtualAddress();
-    ibv.Format = DXGI_FORMAT_R16_UINT;
+    ibv.Format = DXGI_FORMAT_R32_UINT;
     ibv.SizeInBytes = ibBytes;
 
     indexCount = UINT(indices.size());

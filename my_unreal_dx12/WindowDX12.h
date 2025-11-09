@@ -17,6 +17,13 @@ class WindowDX12 {
 public:
     WindowDX12(UINT w, UINT h, const std::wstring& title)
     {
+        #ifdef _DEBUG
+        ComPtr<ID3D12Debug1> dbg;
+        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg)))) {
+            dbg->EnableDebugLayer();
+            dbg->SetEnableGPUBasedValidation(TRUE);
+        }
+        #endif
         m_window.Create(title, w, h);
         m_gfx.Initialize();
         m_swap.Create(m_gfx, m_window.GetHwnd(), w, h);
@@ -69,6 +76,10 @@ public:
 #if _DEBUG
         if (Microsoft::WRL::ComPtr<ID3D12Debug> dbg; SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg))))
             dbg->EnableDebugLayer();
+        ComPtr<ID3D12InfoQueue> q;
+        GetDevice()->QueryInterface(IID_PPV_ARGS(&q));
+        q->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+        q->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 #endif
     }
 

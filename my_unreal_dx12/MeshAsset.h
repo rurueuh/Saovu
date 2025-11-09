@@ -11,7 +11,7 @@ class MeshAsset
 {
 public:
 	std::vector<Vertex> vertices;
-	std::vector<uint16_t> indices;
+	std::vector<uint32_t> indices;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> vb, ib;
 	D3D12_VERTEX_BUFFER_VIEW vbv{};

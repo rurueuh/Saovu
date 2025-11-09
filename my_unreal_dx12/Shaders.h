@@ -30,9 +30,9 @@ static const char* kPixelShaderSrc = R"(
 Texture2D    uTexture : register(t0);
 SamplerState uSampler : register(s0);
 
-static const float3 kLightDir   = normalize(float3(1.0, 0.0, 0.0));
+static const float3 kLightDir   = normalize(float3(1.0, -1.0, 0.0));
 static const float3 kLightColor = float3(1.0, 0.98, 0.90);
-static const float3 kAmbient    = float3(0.22, 0.24, 0.28);
+static const float3 kAmbient    = float3(0.2f, 0.2f, 0.2f);
 
 float4 main(float4 pos:SV_Position, float3 nrm:NORMAL0, float3 col:COLOR0, float2 uv:TEXCOORD0) : SV_Target
 {

@@ -31,36 +31,14 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-static void getFps()
-{
-	auto& win = WindowDX12::Get();
-	static std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
-	static int farmeCount = 0;
-	farmeCount++;
-	if (farmeCount % 60 == 0) {
-		auto currentTime = std::chrono::steady_clock::now();
-		auto frameTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
-		lastTime = currentTime;
-		std::wcout << L"Frame time: " << frameTime << L" ms\r";
-		float fps = 60000.0f / frameTime;
-		std::wstring title = L"My ruru - FPS: " + std::to_wstring(fps);
-		win.setWindowTitle(title);
-	}
-}
+
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
+	
     WindowDX12::ActivateConsole();
 	auto& win = WindowDX12::Get();
-	/*ComPtr<ID3D12Debug1> dbg;
-	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg)))) {
-		dbg->EnableDebugLayer();
-		dbg->SetEnableGPUBasedValidation(TRUE);
-	}*/
-	ComPtr<ID3D12InfoQueue> q;
-	win.GetDevice()->QueryInterface(IID_PPV_ARGS(&q));
-	q->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
-	q->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+	
 	win.setWindowTitle(L"My ruru");
 	win.setWindowSize(1920, 1080);
 	srand(static_cast<unsigned int>(time(nullptr)));
@@ -92,7 +70,6 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
             win.Draw(*c);
         }
 		triangleText->setText("Triangles: %u", v);
-		getFps();
         win.Display();
     }
 }
