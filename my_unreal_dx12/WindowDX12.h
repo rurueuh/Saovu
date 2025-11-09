@@ -64,6 +64,7 @@ public:
             m_whitePtr = std::make_shared<Texture>();
             m_whitePtr->InitWhite1x1(m_gfx);
         }
+        ResourceCache::I().setDefaultWhiteTexture(getDefaultTextureShared());
 #if _DEBUG
         if (Microsoft::WRL::ComPtr<ID3D12Debug> dbg; SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg))))
             dbg->EnableDebugLayer();

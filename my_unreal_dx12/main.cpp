@@ -54,24 +54,6 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 	auto& win = WindowDX12::Get();
 	win.setWindowTitle(L"My ruru");
 	srand(static_cast<unsigned int>(time(nullptr)));
-	ResourceCache::I().setDefaultWhiteTexture(WindowDX12::Get().getDefaultTextureShared());
-	Texture tex;
-    Texture dirt;
-	tex.LoadFromFile(win.GetGraphicsDevice(), "cup.jpg");
-	dirt.LoadFromFile(win.GetGraphicsDevice(), "dirt.jpg");
-
-    std::vector<Mesh> cubes;
-	int numCubes = 0;
-    while (numCubes--) {
-		Mesh cube("cube.txt");
-        cube.SetPosition(((rand() % 100) / 100.f - 0.5f) * 50.f,
-                         ((rand() % 100) / 100.f - 0.5f) * 50.f,
-			((rand() % 100) / 100.f - 0.5f) * 50.f);
-        cube.setColor((rand() % 100) / 100.f,
-                      (rand() % 100) / 100.f,
-			          (rand() % 100) / 100.f);
-		cubes.push_back(cube);
-    }
 
 	std::vector<std::shared_ptr<Mesh>> weapons = {};
 	auto t = std::make_shared<Mesh>("jet/fighter_jet.obj");
