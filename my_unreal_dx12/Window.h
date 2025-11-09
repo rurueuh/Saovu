@@ -54,6 +54,11 @@ public:
 		SetWindowTextW(m_hwnd, title.c_str());
 	}
 
+	void SetSize(UINT width, UINT height)
+	{
+		SetWindowPos(m_hwnd, nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+	}
+
 
 	bool PumpMessages()
 	{

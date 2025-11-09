@@ -53,6 +53,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     WindowDX12::ActivateConsole();
 	auto& win = WindowDX12::Get();
 	win.setWindowTitle(L"My ruru");
+	win.setWindowSize(1920, 1080);
 	srand(static_cast<unsigned int>(time(nullptr)));
 
 	std::vector<std::shared_ptr<Mesh>> weapons = {};

@@ -94,6 +94,10 @@ public:
         Get().m_window.SetTitle(title);
     }
 
+    static void setWindowSize(UINT w, UINT h) {
+        Get().m_window.SetSize(w, h);
+	}
+
     void setWireframe(bool enable) {
         m_pipeline.setWireframe(enable);
     }
