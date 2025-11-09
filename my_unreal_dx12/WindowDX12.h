@@ -52,15 +52,18 @@ public:
         m_camera.LookAt(DirectX::XMVectorSet(0, 0, -5, 0),
             DirectX::XMVectorSet(0, 0, 0, 0),
             DirectX::XMVectorSet(0, 1, 0, 0));
-        m_camera.SetPerspective(DirectX::XM_PIDIV4, aspect, 0.1f, 100.0f);
+        m_camera.SetPerspective(DirectX::XM_PIDIV4, aspect, 0.1f, 10.0f);
         m_view = m_camera.View();
         m_proj = m_camera.Proj();
 
         m_camController = CameraController();
         m_camController.SetPosition({ 0,0,-5 });
         m_camController.SetYawPitch(0.0f, 0.0f);
-        m_camController.SetProj(DirectX::XM_PIDIV4, 0.1f, 100.0f);
-        WindowDX12::m_whiteTex.InitWhite1x1(m_gfx);
+        m_camController.SetProj(DirectX::XM_PIDIV4, 0.1f, 1000.0f);
+        if (!m_whitePtr) {
+            m_whitePtr = std::make_shared<Texture>();
+            m_whitePtr->InitWhite1x1(m_gfx);
+        }
 #if _DEBUG
         if (Microsoft::WRL::ComPtr<ID3D12Debug> dbg; SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg))))
             dbg->EnableDebugLayer();
@@ -73,8 +76,14 @@ public:
     }
     
     Texture &getDefaultTexture(void) {
-		return m_whiteTex;
+		return *m_whitePtr;
 	}
+    std::shared_ptr<Texture> getDefaultTextureShared() {
+        return m_whitePtr;
+    }
+    std::shared_ptr<const Texture> getDefaultTextureShared() const {
+        return m_whitePtr;
+    }
 
     ImGuiDx12& getImGui() {
         return m_imgui;
@@ -90,7 +99,7 @@ public:
 
     bool IsOpen() { return m_window.PumpMessages(); }
 
-    void Clear()
+    uint32_t Clear()
     {
         if (m_window.WasResized()) {
             m_gfx.WaitGPU();
@@ -112,6 +121,9 @@ public:
         m_drawCursor = 0;
         m_renderer.BeginFrame(m_swap.FrameIndex());
 		m_imgui.NewFrame();
+        auto s = m_trianglesCount;
+        m_trianglesCount = 0;
+		return s;
     }
 
     void Draw(const Mesh& mesh)
@@ -131,6 +143,7 @@ public:
         auto addr = m_cb.UploadSlice(slice, mvp);
 
         m_renderer.DrawMesh(mesh, addr);
+		m_trianglesCount += mesh.IndexCount() / 3;
     }
 
     void Display()
@@ -161,8 +174,8 @@ public:
         freopen_s(&fp, "CONOUT$", "w", stderr);
     }
 
-    inline static Texture  m_whiteTex;
 private:
+    inline static std::shared_ptr<Texture> m_whitePtr;
     static constexpr UINT kMaxDrawsPerFrame = 19000;
 
     Window          m_window;
@@ -185,4 +198,5 @@ private:
 
     std::chrono::steady_clock::time_point m_t0 = std::chrono::steady_clock::now();
     float dt = 0.0f;
+	mutable uint32_t m_trianglesCount = 0;
 };

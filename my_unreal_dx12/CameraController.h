@@ -95,5 +95,5 @@ private:
     float  m_sens = 0.0025f;       // rad/pixel
 
     float  m_fov = DirectX::XM_PIDIV4;
-    float  m_nearZ = 0.1f, m_farZ = 100.0f;
+    float  m_nearZ = 0.1f, m_farZ = 10.0f;
 };

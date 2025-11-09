@@ -54,6 +54,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 	auto& win = WindowDX12::Get();
 	win.setWindowTitle(L"My ruru");
 	srand(static_cast<unsigned int>(time(nullptr)));
+	ResourceCache::I().setDefaultWhiteTexture(WindowDX12::Get().getDefaultTextureShared());
 	Texture tex;
     Texture dirt;
 	tex.LoadFromFile(win.GetGraphicsDevice(), "cup.jpg");
@@ -72,12 +73,13 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 		cubes.push_back(cube);
     }
 
-	Mesh weapon("jet/fighter_jet.obj");
-	weapon.SetPosition(0.0f, -15.0f, 20.0f);
-	weapon.SetScale(0.1f, 0.1f, 0.1f);
-
 	std::vector<std::shared_ptr<Mesh>> weapons = {};
-	win.getImGui().AddButton("Add Fighter Jet", [&weapons, &win]() {
+	auto t = std::make_shared<Mesh>("jet/fighter_jet.obj");
+	t->SetPosition(0.f, -10.f, 30.f);
+	t->SetScale(0.1f, 0.1f, 0.1f);
+	weapons.push_back(t);
+	auto meshDraw = win.getImGui().addText("Mesh: 0");
+	win.getImGui().AddButton("Add Fighter Jet", [&weapons, &win, &meshDraw]() {
 		std::shared_ptr<Mesh> weapon = std::make_shared<Mesh>("jet/fighter_jet.obj");
 		weapon->SetPosition(((rand() % 100) / 100.f - 0.5f) * 50.f,
 			((rand() % 100) / 100.f - 0.5f) * 50.f,
@@ -85,25 +87,20 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 		);
 		weapon->SetScale(0.1f, 0.1f, 0.1f);
 		weapons.push_back(std::move(weapon));
+		meshDraw->setText("Mesh: %u", weapons.size());
 	});
+
+	auto triangleText = win.getImGui().addText("Triangles: 0");
 
 
     while (win.IsOpen())
     {
-        win.Clear();
-		win.Draw(weapon);
+        auto v = win.Clear();
         for (auto& c : weapons) {
             win.Draw(*c);
         }
-        if (GetAsyncKeyState('P') & 0x0001)
-        {
-            static bool wireframe = false;
-            wireframe = !wireframe;
-            win.setWireframe(wireframe);
-		}
-
+		triangleText->setText("Triangles: %u", v);
 		getFps();
         win.Display();
-
     }
 }
