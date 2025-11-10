@@ -21,12 +21,11 @@ public:
     Mesh(Mesh&&) noexcept = default;
     Mesh& operator=(Mesh&&) noexcept = default;
 
-    // Transform API (angles en DEGRÉS)
     void SetPosition(float x, float y, float z);
     void AddPosition(float dx, float dy, float dz);
 
-    void SetRotationYawPitchRoll(float yawDeg, float pitchDeg, float rollDeg);          // remplace l’orientation
-    void AddRotationYawPitchRoll(float dyawDeg, float dpitchDeg, float drollDeg);      // incrémente (local)
+    void SetRotationYawPitchRoll(float yawDeg, float pitchDeg, float rollDeg);
+    void AddRotationYawPitchRoll(float dyawDeg, float dpitchDeg, float drollDeg);
 
     void SetScale(float sx, float sy, float sz);
     void AddScale(float dsx, float dsy, float dsz);
@@ -59,7 +58,6 @@ private:
 private:
     std::shared_ptr<MeshAsset> m_asset;
 
-    // Nouveau: TRS décomposé
     DirectX::XMVECTOR m_position{ DirectX::XMVectorZero() };
     DirectX::XMVECTOR m_scale{ DirectX::XMVectorSet(1,1,1,0) };
     DirectX::XMVECTOR m_rotQ{ DirectX::XMQuaternionIdentity() };

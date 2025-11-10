@@ -63,7 +63,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 	weapons[0]->SetRotationYawPitchRoll(3.0f, 0.0f, 0.0f);
 	win.getImGui().addSliderFloat("rotate fighter0", &rotateFighter, 0.0f, 360.0f, [&weapons](float val) {
 		if (weapons.size() > 0) {
-			weapons[0]->SetRotationYawPitchRoll(val, val, val);
+			weapons[0]->SetRotationYawPitchRoll(0.0f, val, 0.0f);
 		}
 	});
 
