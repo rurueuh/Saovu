@@ -3,6 +3,8 @@
 #include <DirectXMath.h>
 #include "MeshAsset.h"
 #include "ResourceCache.h"
+#include "Utils.h"
+#include <cmath>
 
 struct Vertex {
     float px, py, pz;
@@ -30,13 +32,31 @@ public:
 	static Mesh CreateCone(    float radius = 1, float height = 1, uint32_t slices = 32, bool withBase = true);
 
     void SetPosition(float x, float y, float z);
+	void SetPositionX(float x);
+	void SetPositionY(float y);
+	void SetPositionZ(float z);
     void AddPosition(float dx, float dy, float dz);
+	void AddPositionX(float dx);
+	void AddPositionY(float dy);
+	void AddPositionZ(float dz);
 
     void SetRotationYawPitchRoll(float yawDeg, float pitchDeg, float rollDeg);
+	void SetRotationYaw(float yawDeg);
+	void SetRotationPitch(float pitchDeg);
+	void SetRotationRoll(float rollDeg);
     void AddRotationYawPitchRoll(float dyawDeg, float dpitchDeg, float drollDeg);
+	void AddRotationYaw(float dyawDeg);
+	void AddRotationPitch(float dpitchDeg);
+	void AddRotationRoll(float drollDeg);
 
     void SetScale(float sx, float sy, float sz);
+	void SetScaleX(float sx);
+	void SetScaleY(float sy);
+	void SetScaleZ(float sz);
     void AddScale(float dsx, float dsy, float dsz);
+	void AddScaleX(float dsx);
+	void AddScaleY(float dsy);
+	void AddScaleZ(float dsz);
 
     const DirectX::XMMATRIX& Transform() const { return m_transform; }
 
@@ -51,7 +71,7 @@ public:
         return m_asset->texture ? m_asset->texture : ResourceCache::I().defaultWhite();
     }
 
-    void setColor(float r, float g, float b);
+    void SetColor(float r, float g, float b);
     std::tuple<float, float, float> getColor() const;
 
     void BindTexture(ID3D12GraphicsCommandList* cmdList, UINT rootParamIndex) const;
@@ -60,10 +80,9 @@ public:
     const D3D12_INDEX_BUFFER_VIEW& IBV() const { return m_asset->ibv; }
     UINT IndexCount() const { return m_asset->indexCount; }
 
-private:
-    void UpdateMatrix();
 
 private:
+    void UpdateMatrix();
     std::shared_ptr<MeshAsset> m_asset;
 
     DirectX::XMVECTOR m_position{ DirectX::XMVectorZero() };
@@ -71,4 +90,10 @@ private:
     DirectX::XMVECTOR m_rotQ{ DirectX::XMQuaternionIdentity() };
 
     DirectX::XMMATRIX m_transform{ DirectX::XMMatrixIdentity() };
+
+    float m_yawDeg = 0.f; // autour de +Y (monde)
+    float m_pitchDeg = 0.f; // autour de +X (monde)
+    float m_rollDeg = 0.f; // autour de +Z (monde)
+
+    void RecomputeRotationFromAbsoluteEuler(); // (re)construit m_rotQ depuis les 3 angles
 };

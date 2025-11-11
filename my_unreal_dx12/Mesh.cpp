@@ -2,8 +2,6 @@
 #include "WindowDX12.h"
 using namespace DirectX;
 
-static inline float Deg(float d) { return XMConvertToRadians(d); }
-
 static inline void NormalizeSafe(XMVECTOR& q) {
     if (XMVector4Less(XMVector4LengthSq(q), XMVectorReplicate(1e-20f))) {
         q = XMQuaternionIdentity();
@@ -11,6 +9,13 @@ static inline void NormalizeSafe(XMVECTOR& q) {
     else {
         q = XMQuaternionNormalize(q);
     }
+}
+static inline float DegToRad(float d) { return XMConvertToRadians(d); }
+
+static inline float WrapDeg(float a) {
+    a = std::fmod(a + 180.f, 360.f);
+    if (a < 0.f) a += 360.f;
+    return a - 180.f;
 }
 
 void Mesh::UpdateMatrix() {
@@ -26,16 +31,16 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& ind
     m_asset->indices = indices;
     m_asset->texture = ResourceCache::I().defaultWhite();
     m_asset->Upload(WindowDX12::Get().GetDevice());
-    UpdateMatrix();
+    RecomputeRotationFromAbsoluteEuler();
 }
 
 Mesh::Mesh(const std::string& filename) {
     m_asset = ResourceCache::I().getMeshFromOBJ(filename);
     if (!m_asset->texture) m_asset->texture = ResourceCache::I().defaultWhite();
-    UpdateMatrix();
+    RecomputeRotationFromAbsoluteEuler();
 }
 
-void Mesh::setColor(float r, float g, float b) {
+void Mesh::SetColor(float r, float g, float b) {
     for (auto& v : m_asset->vertices) { v.r = r; v.g = g; v.b = b; }
     m_asset->Upload(nullptr);
 }
@@ -290,7 +295,7 @@ Mesh Mesh::CreateCone(float radius, float height, uint32_t slices, bool withBase
             0.0f,-1.0f,0.0f,
             1,1,1,
             0.5f, 0.5f
-            });
+         });
 
         uint32_t baseStart = (uint32_t)vertices.size();
         for (uint32_t i = 0; i <= slices; ++i) {
@@ -303,7 +308,7 @@ Mesh Mesh::CreateCone(float radius, float height, uint32_t slices, bool withBase
                 0.0f,-1.0f,0.0f,
                 1,1,1,
                 0.5f * (x + 1.0f), 0.5f * (z + 1.0f)
-                });
+            });
         }
 
         for (uint32_t i = 0; i < slices; ++i) {
@@ -320,28 +325,177 @@ void Mesh::SetPosition(float x, float y, float z) {
     m_position = XMVectorSet(x, y, z, 0.0f);
     UpdateMatrix();
 }
+
+void Mesh::SetPositionX(float x)
+{
+    XMFLOAT3 p; XMStoreFloat3(&p, m_position);
+    p.x = x;
+    m_position = XMVectorSet(p.x, p.y, p.z, 0.0f);
+	UpdateMatrix();
+}
+
+void Mesh::SetPositionY(float y)
+{
+    XMFLOAT3 p; XMStoreFloat3(&p, m_position);
+    p.y = y;
+    m_position = XMVectorSet(p.x, p.y, p.z, 0.0f);
+    UpdateMatrix();
+}
+void Mesh::SetPositionZ(float z)
+{
+    XMFLOAT3 p; XMStoreFloat3(&p, m_position);
+    p.z = z;
+    m_position = XMVectorSet(p.x, p.y, p.z, 0.0f);
+    UpdateMatrix();
+}
+
+
 void Mesh::AddPosition(float dx, float dy, float dz) {
     m_position = XMVectorAdd(m_position, XMVectorSet(dx, dy, dz, 0.0f));
     UpdateMatrix();
 }
 
-void Mesh::SetRotationYawPitchRoll(float yawDeg, float pitchDeg, float rollDeg) {
-    m_rotQ = XMQuaternionRotationRollPitchYaw(Deg(pitchDeg), Deg(yawDeg), Deg(rollDeg));
-    NormalizeSafe(m_rotQ);
+void Mesh::AddPositionX(float dx)
+{
+    XMFLOAT3 p; XMStoreFloat3(&p, m_position);
+    p.x += dx;
+    m_position = XMVectorSet(p.x, p.y, p.z, 0.0f);
+    UpdateMatrix();
+}
+void Mesh::AddPositionY(float dy)
+{
+    XMFLOAT3 p; XMStoreFloat3(&p, m_position);
+    p.y += dy;
+    m_position = XMVectorSet(p.x, p.y, p.z, 0.0f);
+    UpdateMatrix();
+}
+void Mesh::AddPositionZ(float dz)
+{
+    XMFLOAT3 p; XMStoreFloat3(&p, m_position);
+    p.z += dz;
+    m_position = XMVectorSet(p.x, p.y, p.z, 0.0f);
     UpdateMatrix();
 }
 
-void Mesh::AddRotationYawPitchRoll(float dyawDeg, float dpitchDeg, float drollDeg) {
-    const XMVECTOR dq = XMQuaternionRotationRollPitchYaw(Deg(dpitchDeg), Deg(dyawDeg), Deg(drollDeg));
-    m_rotQ = XMQuaternionMultiply(m_rotQ, dq);
-    NormalizeSafe(m_rotQ);
+void Mesh::RecomputeRotationFromAbsoluteEuler()
+{
+    m_yawDeg = WrapDeg(m_yawDeg);
+    m_pitchDeg = WrapDeg(m_pitchDeg);
+    m_rollDeg = WrapDeg(m_rollDeg);
+
+    const XMVECTOR qy = XMQuaternionRotationAxis(XMVectorSet(0.f, 1.f, 0.f, 0.f), DegToRad(m_yawDeg));
+    const XMVECTOR qx = XMQuaternionRotationAxis(XMVectorSet(1.f, 0.f, 0.f, 0.f), DegToRad(m_pitchDeg));
+    const XMVECTOR qz = XMQuaternionRotationAxis(XMVectorSet(0.f, 0.f, 1.f, 0.f), DegToRad(m_rollDeg));
+
+    XMVECTOR q = XMQuaternionMultiply(qy, XMQuaternionMultiply(qx, qz));
+    NormalizeSafe(q);
+    m_rotQ = q;
+
     UpdateMatrix();
+}
+
+void Mesh::SetRotationYawPitchRoll(float yawDeg, float pitchDeg, float rollDeg) {
+    m_yawDeg = yawDeg;
+    m_pitchDeg = pitchDeg;
+    m_rollDeg = rollDeg;
+    RecomputeRotationFromAbsoluteEuler();
+}
+
+void Mesh::SetRotationYaw(float yawDeg) {
+    m_yawDeg = yawDeg;
+    RecomputeRotationFromAbsoluteEuler();
+}
+
+void Mesh::SetRotationPitch(float pitchDeg) {
+    m_pitchDeg = pitchDeg;
+    RecomputeRotationFromAbsoluteEuler();
+}
+
+void Mesh::SetRotationRoll(float rollDeg) {
+    m_rollDeg = rollDeg;
+    RecomputeRotationFromAbsoluteEuler();
+}
+
+void Mesh::AddRotationYaw(float dyawDeg) {
+    m_yawDeg = WrapDeg(m_yawDeg + dyawDeg);
+    RecomputeRotationFromAbsoluteEuler();
+}
+
+void Mesh::AddRotationPitch(float dpitchDeg) {
+    m_pitchDeg = WrapDeg(m_pitchDeg + dpitchDeg);
+    RecomputeRotationFromAbsoluteEuler();
+}
+
+void Mesh::AddRotationRoll(float drollDeg) {
+    m_rollDeg = WrapDeg(m_rollDeg + drollDeg);
+    RecomputeRotationFromAbsoluteEuler();
+}
+
+void Mesh::AddRotationYawPitchRoll(float dyawDeg, float dpitchDeg, float drollDeg) {
+    m_yawDeg = WrapDeg(m_yawDeg + dyawDeg);
+    m_pitchDeg = WrapDeg(m_pitchDeg + dpitchDeg);
+    m_rollDeg = WrapDeg(m_rollDeg + drollDeg);
+    RecomputeRotationFromAbsoluteEuler();
 }
 
 void Mesh::SetScale(float sx, float sy, float sz) {
     m_scale = XMVectorSet(sx, sy, sz, 0.0f);
     UpdateMatrix();
 }
+void Mesh::SetScaleX(float sx)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.x = sx;
+    if (s.x == 0) s.x = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+	UpdateMatrix();
+}
+
+void Mesh::SetScaleY(float sy)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.y = sy;
+    if (s.y == 0) s.y = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::SetScaleZ(float sz)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.z = sz;
+    if (s.z == 0) s.z = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::AddScaleX(float dsx)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.x += dsx;
+    if (s.x == 0) s.x = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::AddScaleY(float dsy)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.y += dsy;
+    if (s.y == 0) s.y = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::AddScaleZ(float dsz)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.z += dsz;
+    if (s.z == 0) s.z = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
 void Mesh::AddScale(float dsx, float dsy, float dsz) {
     m_scale = XMVectorAdd(m_scale, XMVectorSet(dsx, dsy, dsz, 0.0f));
     XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
