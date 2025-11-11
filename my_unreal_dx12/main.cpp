@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <windows.h>
 
 #include "Utils.h"
 #include "Window.h"
@@ -43,12 +44,17 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 
 	Mesh floor = Mesh::CreatePlane(100.0f, 100.0f, 2, 2);
 	floor.SetPosition(0.f, -5.f, 0.f);
-	floor.setColor(0.3f, 0.0f, 0.1f);
+	floor.SetColor(0.3f, 0.0f, 0.1f);
 
 	std::vector<std::shared_ptr<Mesh>> geometricsMeshes = {};
 	auto cubeMesh = std::make_shared<Mesh>(Mesh::CreateCube(2.0f));
 	cubeMesh->SetPosition(10.f, 0.f, 0.f);
 	geometricsMeshes.push_back(cubeMesh);
+
+	auto cubeMesh2 = std::make_shared<Mesh>(Mesh::CreateCube(2.0f));
+	cubeMesh2->SetPosition(12.f, 0.f, 0.f);
+	geometricsMeshes.push_back(cubeMesh2);
+
 
 	auto sphereMesh = std::make_shared<Mesh>(Mesh::CreateSphere(1.0f, 16, 16));
 	sphereMesh->SetPosition(-10.f, 0.f, 0.f);
@@ -89,24 +95,15 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 
 	win.getImGui().addSeparator();
 
-	/*win.getImGui().addSliderFloat("translate fighter0 x", nullptr, -100.0f, 100.0f, [&weapons](float val) {
-		if (weapons.size() > 0) {
-			weapons[0]->SetPosition(0.0f, val, 0.0f);
-			
-		}
-		});
-	win.getImGui().addSliderFloat("translate fighter0 y", nullptr, -100.0f, 100.0f, [&weapons](float val) {
-		if (weapons.size() > 0) {
-			weapons[0]->SetPosition(0.0f, 0.0f, val);
-			
-		}
-		});
-	win.getImGui().addSliderFloat("translate fighter0 z", nullptr, -100.0f, 100.0f, [&weapons](float val) {
-		if (weapons.size() > 0) {
-			weapons[0]->SetPosition(val, 0.0f, 0.0f);
-			
-		}
-	});*/
+	win.getImGui().addSliderFloat("translate fighter0 x", nullptr, 0.0f, 180.0f * 2.f, [&cubeMesh](float val) {
+		cubeMesh->SetRotationPitch(val);
+	});
+	win.getImGui().addSliderFloat("translate fighter0 y", nullptr, 0.0f, 180.0f * 2.f, [&cubeMesh](float val) {
+		cubeMesh->SetRotationYaw(val);
+	});
+	win.getImGui().addSliderFloat("translate fighter0 z", nullptr, 0.0f, 180.0f * 2.f, [&cubeMesh](float val) {
+		cubeMesh->SetRotationRoll(val);
+	});
 
 
 
@@ -122,6 +119,13 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 		win.Draw(floor);
 		for (auto& g : geometricsMeshes) {
 			win.Draw(*g);
+		}
+		if (GetAsyncKeyState('R') & 0x8000) {
+			cubeMesh->AddRotationYawPitchRoll(0.0f, -0.5f, 0.0f);
+		} if (GetAsyncKeyState('T') & 0x8000) {
+			cubeMesh->AddRotationYawPitchRoll(0.0f, 0.0f, -0.5f);
+		} if (GetAsyncKeyState('F') & 0x8000) {
+			cubeMesh->AddRotationYawPitchRoll(-0.5f, 0.0f, 0.0f);
 		}
 		triangleText->setText("Triangles: %u", v);
         win.Display();
