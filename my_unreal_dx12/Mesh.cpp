@@ -138,11 +138,11 @@ Mesh Mesh::CreateCube(float size)
     return Mesh(vertices, indices);
 }
 
-Mesh Mesh::CreateSphere(float size, uint16_t slices, uint16_t stacks)
+Mesh Mesh::CreateSphere(float diameter, uint16_t slices, uint16_t stacks)
 {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
-    float r = size * 0.5f;
+    float r = diameter * 0.5f;
 
     for (uint32_t i = 0; i <= stacks; ++i) {
         float phi = M_PI * i / stacks;
