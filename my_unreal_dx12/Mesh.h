@@ -4,6 +4,7 @@
 #include "MeshAsset.h"
 #include "ResourceCache.h"
 #include "Utils.h"
+#include <cmath>
 
 struct Vertex {
     float px, py, pz;
