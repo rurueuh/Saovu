@@ -91,9 +91,9 @@ private:
 
     DirectX::XMMATRIX m_transform{ DirectX::XMMatrixIdentity() };
 
-    float m_yawDeg = 0.f; // autour de +Y (monde)
-    float m_pitchDeg = 0.f; // autour de +X (monde)
-    float m_rollDeg = 0.f; // autour de +Z (monde)
+    float m_yawDeg = 0.f;
+    float m_pitchDeg = 0.f;
+    float m_rollDeg = 0.f;
 
-    void RecomputeRotationFromAbsoluteEuler(); // (re)construit m_rotQ depuis les 3 angles
+    void RecomputeRotationFromAbsoluteEuler();
 };
