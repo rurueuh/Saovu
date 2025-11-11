@@ -442,6 +442,60 @@ void Mesh::SetScale(float sx, float sy, float sz) {
     m_scale = XMVectorSet(sx, sy, sz, 0.0f);
     UpdateMatrix();
 }
+void Mesh::SetScaleX(float sx)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.x = sx;
+    if (s.x == 0) s.x = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+	UpdateMatrix();
+}
+
+void Mesh::SetScaleY(float sy)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.y = sy;
+    if (s.y == 0) s.y = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::SetScaleZ(float sz)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.z = sz;
+    if (s.z == 0) s.z = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::AddScaleX(float dsx)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.x += dsx;
+    if (s.x == 0) s.x = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::AddScaleY(float dsy)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.y += dsy;
+    if (s.y == 0) s.y = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
+void Mesh::AddScaleZ(float dsz)
+{
+    XMFLOAT3 s; XMStoreFloat3(&s, m_scale);
+    s.z += dsz;
+    if (s.z == 0) s.z = 1e-6f;
+    m_scale = XMVectorSet(s.x, s.y, s.z, 0.0f);
+    UpdateMatrix();
+}
+
 void Mesh::AddScale(float dsx, float dsy, float dsz) {
     m_scale = XMVectorAdd(m_scale, XMVectorSet(dsx, dsy, dsz, 0.0f));
     XMFLOAT3 s; XMStoreFloat3(&s, m_scale);

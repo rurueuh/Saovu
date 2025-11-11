@@ -95,18 +95,6 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 
 	win.getImGui().addSeparator();
 
-	win.getImGui().addSliderFloat("translate fighter0 x", nullptr, 0.0f, 180.0f * 2.f, [&cubeMesh](float val) {
-		cubeMesh->SetRotationPitch(val);
-	});
-	win.getImGui().addSliderFloat("translate fighter0 y", nullptr, 0.0f, 180.0f * 2.f, [&cubeMesh](float val) {
-		cubeMesh->SetRotationYaw(val);
-	});
-	win.getImGui().addSliderFloat("translate fighter0 z", nullptr, 0.0f, 180.0f * 2.f, [&cubeMesh](float val) {
-		cubeMesh->SetRotationRoll(val);
-	});
-
-
-
 	auto triangleText = win.getImGui().addText("Triangles: 0");
 
 
