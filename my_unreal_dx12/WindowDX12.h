@@ -55,7 +55,7 @@ public:
 
         {
             auto shadowSrv = AllocateSrv();
-            m_shadowMap.Initialize(m_gfx.Device(), 2048, 2048, shadowSrv.cpu, shadowSrv.gpu);
+            m_shadowMap.Initialize(m_gfx.Device(), 4096, 4096, shadowSrv.cpu, shadowSrv.gpu);
         }
 
         m_imgui.Init(m_window.GetHwnd(), m_gfx, m_swap);
