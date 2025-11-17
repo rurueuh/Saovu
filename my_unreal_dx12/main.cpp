@@ -133,20 +133,9 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
         }
     );
 
-    std::vector<Mesh*> shadowMeshes;
-
     while (win.IsOpen())
     {
         uint32_t trianglesLastFrame = win.Clear();
-
-        shadowMeshes.clear();
-        shadowMeshes.push_back(&floor);
-        for (auto& m : geometricsMeshes)
-            shadowMeshes.push_back(m.get());
-        for (auto& w : weapons)
-            shadowMeshes.push_back(w.get());
-
-        win.RenderShadowPass(shadowMeshes);
 
         for (auto& w : weapons)
             win.Draw(*w);
