@@ -154,6 +154,21 @@ public:
         m_psoCurrent = enable ? m_psoWire : m_psoSolid;
     }
 
+    void Destroy()
+    {
+        m_psoSolid.Reset();
+        m_psoWire.Reset();
+        m_psoCurrent.Reset();
+        m_root.Reset();
+        m_vsBlob.Reset();
+        m_psBlob.Reset();
+        m_cachedInputElements.clear();
+        m_cachedInputLayout = {};
+        m_cachedRTV = DXGI_FORMAT_UNKNOWN;
+        m_cachedDSV = DXGI_FORMAT_UNKNOWN;
+        device = nullptr;
+	}
+
     ID3D12PipelineState* PSO()  const { return m_psoCurrent.Get(); }
     ID3D12RootSignature* Root() const { return m_root.Get(); }
 
