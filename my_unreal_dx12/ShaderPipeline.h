@@ -15,7 +15,10 @@ public:
     void Create(ID3D12Device* device,
         const D3D12_INPUT_ELEMENT_DESC* inputLayout, UINT inputCount,
         const char* vsSource, const char* psSource,
-        DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat)
+        DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat,
+        bool enableBlend = false,
+        bool depthWrite = true,
+        D3D12_CULL_MODE cull = D3D12_CULL_MODE_BACK)
     {
 
         D3D12_DESCRIPTOR_RANGE ranges[2]{};
@@ -131,22 +134,23 @@ public:
         m_cachedRTV = rtvFormat;
         m_cachedDSV = dsvFormat;
 
-        auto blend = CreateBlend();
-        auto depth = CreateDepth();
+        auto blend = CreateBlend(enableBlend);
+        auto depth = CreateDepth(depthWrite);
 
         {
-            auto rastSolid = CreateRast(false);
+            auto rastSolid = CreateRast(false, cull);
             auto psoDesc = CreatePso(rastSolid, blend, depth);
             DXThrow(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_psoSolid)));
         }
         {
-            auto rastWire = CreateRast(true);
+            auto rastWire = CreateRast(true, cull);
             auto psoDesc = CreatePso(rastWire, blend, depth);
             DXThrow(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_psoWire)));
         }
 
         m_psoCurrent = m_psoSolid;
         this->device = device;
+
     }
 
     void setWireframe(bool enable)
@@ -209,56 +213,10 @@ private:
     }
 
 
-    D3D12_DEPTH_STENCIL_DESC CreateDepth()
-    {
-        D3D12_DEPTH_STENCIL_DESC d{};
-        d.DepthEnable = TRUE;
-        d.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-        d.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-        d.StencilEnable = FALSE;
-        d.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
-        d.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
-        d.FrontFace = { D3D12_STENCIL_OP_KEEP, D3D12_STENCIL_OP_KEEP,
-                               D3D12_STENCIL_OP_KEEP, D3D12_COMPARISON_FUNC_ALWAYS };
-        d.BackFace = d.FrontFace;
-        return d;
-    }
+    D3D12_BLEND_DESC CreateBlend(bool enableBlend);
+    D3D12_DEPTH_STENCIL_DESC CreateDepth(bool depthWrite);
+    D3D12_RASTERIZER_DESC CreateRast(bool wireframed, D3D12_CULL_MODE cull);
 
-    D3D12_RASTERIZER_DESC CreateRast(bool wireframed)
-    {
-        D3D12_RASTERIZER_DESC r{};
-        r.FillMode = wireframed ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
-        r.CullMode = D3D12_CULL_MODE_BACK;
-        r.FrontCounterClockwise = FALSE;
-        r.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-        r.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-        r.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-        r.DepthClipEnable = TRUE;
-        r.MultisampleEnable = FALSE;
-        r.AntialiasedLineEnable = FALSE;
-        r.ForcedSampleCount = 0;
-        r.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-        return r;
-    }
-
-    D3D12_BLEND_DESC CreateBlend()
-    {
-        D3D12_BLEND_DESC b{};
-        b.AlphaToCoverageEnable = FALSE;
-        b.IndependentBlendEnable = FALSE;
-        auto& rt = b.RenderTarget[0];
-        rt.BlendEnable = FALSE;
-        rt.LogicOpEnable = FALSE;
-        rt.SrcBlend = D3D12_BLEND_ONE;
-        rt.DestBlend = D3D12_BLEND_ZERO;
-        rt.BlendOp = D3D12_BLEND_OP_ADD;
-        rt.SrcBlendAlpha = D3D12_BLEND_ONE;
-        rt.DestBlendAlpha = D3D12_BLEND_ZERO;
-        rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
-        rt.LogicOp = D3D12_LOGIC_OP_NOOP;
-        rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-        return b;
-    }
 
 private:
     ComPtr<ID3D12RootSignature>    m_root;

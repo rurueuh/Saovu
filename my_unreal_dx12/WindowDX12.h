@@ -77,6 +77,7 @@ private:
     Renderer        m_renderer;
     ShaderPipeline  m_pipeline;
     ShaderPipeline  m_shadowPipeline;
+    ShaderPipeline  m_alphaPipeline;
     ShadowMap       m_shadowMap;
 
     ConstantBuffer  m_cb{};

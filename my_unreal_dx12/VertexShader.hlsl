@@ -11,6 +11,12 @@ cbuffer Scene : register(b0)
 
     float3 uLightDir;
     float _pad0;
+
+    float3 uKs;
+    float uOpacity;
+
+    float3 uKe;
+    float _pad1;
 };
 
 struct VSIn
