@@ -5,6 +5,15 @@
 #include <string>
 #include "MeshAsset.h"
 
+struct Material {
+    DirectX::XMFLOAT3 Kd{ 1,1,1 };
+    DirectX::XMFLOAT3 Ks{ 1,1,1 };
+    DirectX::XMFLOAT3 Ke{ 0,0,0 };
+    std::string map_Kd;
+    float Ns{ 128.f };
+    float d{ 1.f };
+};
+
 class ResourceCache {
 public:
     static ResourceCache& I() { static ResourceCache s; return s; }

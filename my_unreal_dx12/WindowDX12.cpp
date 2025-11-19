@@ -1,5 +1,10 @@
 #include "WindowDX12.h"
 
+struct TransparentCommand {
+    Mesh* mesh;
+    const Submesh* sm;
+};
+
 WindowDX12::WindowDX12(UINT w, UINT h, const std::wstring& title)
 {
 #ifdef _DEBUG
@@ -182,7 +187,23 @@ void WindowDX12::CreateShader(void)
         il, _countof(il),
         vertexShaderSrc, pixelShaderSrc,
         DXGI_FORMAT_R8G8B8A8_UNORM,
-        DXGI_FORMAT_D32_FLOAT);
+        DXGI_FORMAT_D32_FLOAT,
+        false,
+        true,
+        D3D12_CULL_MODE_BACK
+    );
+
+    m_alphaPipeline.Create(
+        m_gfx.Device(),
+        il, _countof(il),
+        vertexShaderSrc, pixelShaderSrc,
+        DXGI_FORMAT_R8G8B8A8_UNORM,
+        DXGI_FORMAT_D32_FLOAT,
+        true,
+        false,
+        D3D12_CULL_MODE_NONE
+    );
+
     m_renderer.SetPipeline(m_pipeline);
 
     delete[] vertexShaderSrc;
@@ -325,6 +346,11 @@ void WindowDX12::ActivateConsole()
 void WindowDX12::DrawScene() {
     using namespace DirectX;
 
+    std::vector<TransparentCommand> transparent;
+
+    m_renderer.SetPipeline(m_pipeline);
+    m_renderer.BindMainRenderTargets();
+
     for (auto& meshPtr : m_DrawList) {
         XMMATRIX M = meshPtr->Transform();
         XMMATRIX V = m_camera.View();
@@ -346,25 +372,32 @@ void WindowDX12::DrawScene() {
         base.uLightDir = m_lightDir;
         base._pad0 = 0.0f;
 
-        const UINT frame = m_swap.FrameIndex();
+        base.uKs = DirectX::XMFLOAT3(1.f, 1.f, 1.f);
+        base.uOpacity = 1.f;
+        base.uKe = DirectX::XMFLOAT3(0.f, 0.f, 0.f);
+        base._pad1 = 0.0f;
 
+        const UINT frame = m_swap.FrameIndex();
         const MeshAsset* asset = meshPtr->GetAsset();
 
         if (asset && !asset->submeshes.empty()) {
             for (const auto& sm : asset->submeshes) {
+                if (sm.opacity < 0.999f) {
+                    transparent.push_back({ meshPtr, &sm });
+                    continue;
+                }
+
                 SceneCB cb = base;
                 cb.uShininess = sm.shininess;
+                cb.uKs = sm.ks;
+                cb.uOpacity = sm.opacity;
+                cb.uKe = sm.ke;
 
                 const UINT slice = frame * kMaxDrawsPerFrame + (m_drawCursor++);
                 D3D12_GPU_VIRTUAL_ADDRESS addr = m_cb.UploadSlice(slice, cb);
 
-                Texture* tex = nullptr;
-                if (sm.texture)
-                    tex = sm.texture.get();
-                else
-                    tex = meshPtr->GetTexture();
-                if (!tex)
-                    tex = &getDefaultTexture();
+                Texture* tex = sm.texture ? sm.texture.get() : meshPtr->GetTexture();
+                if (!tex) tex = &getDefaultTexture();
 
                 D3D12_GPU_DESCRIPTOR_HANDLE texHandle = tex->GPUHandle();
                 D3D12_GPU_DESCRIPTOR_HANDLE shadowHandle = m_shadowMap.SRVGPU();
@@ -382,8 +415,7 @@ void WindowDX12::DrawScene() {
             D3D12_GPU_VIRTUAL_ADDRESS addr = m_cb.UploadSlice(slice, cb);
 
             auto* tex = meshPtr->GetTexture();
-            if (!tex)
-                tex = &getDefaultTexture();
+            if (!tex) tex = &getDefaultTexture();
 
             D3D12_GPU_DESCRIPTOR_HANDLE texHandle = tex->GPUHandle();
             D3D12_GPU_DESCRIPTOR_HANDLE shadowHandle = m_shadowMap.SRVGPU();
@@ -392,4 +424,54 @@ void WindowDX12::DrawScene() {
             m_trianglesCount += meshPtr->IndexCount() / 3;
         }
     }
+
+    if (!transparent.empty()) {
+        m_renderer.SetPipeline(m_alphaPipeline);
+        m_renderer.BindMainRenderTargets();
+
+        const UINT frame = m_swap.FrameIndex();
+
+        for (auto& cmd : transparent) {
+            Mesh* meshPtr = cmd.mesh;
+            const Submesh* sm = cmd.sm;
+
+            XMMATRIX M = meshPtr->Transform();
+            XMMATRIX V = m_camera.View();
+            XMMATRIX P = m_camera.Proj();
+            XMMATRIX VP = V * P;
+
+            XMFLOAT3 camPos = m_camera.getPosition();
+
+            XMVECTOR det;
+            XMMATRIX MInv = XMMatrixInverse(&det, M);
+            XMMATRIX NMat = XMMatrixTranspose(MInv);
+
+            SceneCB cb{};
+            XMStoreFloat4x4(&cb.uModel, XMMatrixTranspose(M));
+            XMStoreFloat4x4(&cb.uViewProj, XMMatrixTranspose(VP));
+            XMStoreFloat4x4(&cb.uNormalMatrix, XMMatrixTranspose(NMat));
+            cb.uCameraPos = camPos;
+            cb.uLightViewProj = m_lightViewProj;
+            cb.uLightDir = m_lightDir;
+
+            cb.uShininess = sm->shininess;
+            cb.uKs = sm->ks;
+            cb.uOpacity = sm->opacity;
+            cb.uKe = sm->ke;
+
+            const UINT slice = frame * kMaxDrawsPerFrame + (m_drawCursor++);
+            D3D12_GPU_VIRTUAL_ADDRESS addr = m_cb.UploadSlice(slice, cb);
+
+            Texture* tex = sm->texture ? sm->texture.get() : meshPtr->GetTexture();
+            if (!tex) tex = &getDefaultTexture();
+
+            D3D12_GPU_DESCRIPTOR_HANDLE texHandle = tex->GPUHandle();
+            D3D12_GPU_DESCRIPTOR_HANDLE shadowHandle = m_shadowMap.SRVGPU();
+
+            m_renderer.DrawMeshRange(*meshPtr, addr, texHandle, shadowHandle,
+                sm->indexStart, sm->indexCount);
+            m_trianglesCount += sm->indexCount / 3;
+        }
+    }
 }
+

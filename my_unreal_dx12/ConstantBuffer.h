@@ -13,11 +13,19 @@ struct alignas(16) SceneCB
     DirectX::XMFLOAT4X4 uViewProj;
     DirectX::XMFLOAT4X4 uNormalMatrix;
 
-	DirectX::XMFLOAT3 uCameraPos;
-	float uShininess;
+    DirectX::XMFLOAT3 uCameraPos;
+    float uShininess;
+
     DirectX::XMFLOAT4X4 uLightViewProj;
+
     DirectX::XMFLOAT3 uLightDir;
     float _pad0;
+
+    DirectX::XMFLOAT3 uKs;
+    float uOpacity;
+
+    DirectX::XMFLOAT3 uKe;
+    float _pad1;
 };
 
 static_assert(sizeof(SceneCB) % 16 == 0, "SceneCB must be 16-byte aligned");

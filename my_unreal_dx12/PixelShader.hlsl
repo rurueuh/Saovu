@@ -11,6 +11,12 @@ cbuffer Scene : register(b0)
 
     float3 uLightDir;
     float _pad0;
+
+    float3 uKs;
+    float uOpacity;
+
+    float3 uKe;
+    float _pad1;
 };
 
 Texture2D uTexture : register(t0);
@@ -158,13 +164,17 @@ float4 main(VSOut i) : SV_Target
     if (NdotL > 0.0f)
         spec = pow(saturate(dot(R, V)), uShininess);
 
-    float3 specular = kLightColor * spec;
+    float3 specular = kLightColor * spec * uKs;
 
     float shadow = ComputeShadow(i.shadowPos, N, i.pos);
 
+    float4 texSample = uTexture.Sample(uSampler, i.uv);
+    float3 albedo = texSample.rgb * i.col;
+
     float3 lighting = kAmbient + shadow * (diffuse + specular);
+    float3 color = albedo * lighting + uKe;
 
-    float3 albedo = uTexture.Sample(uSampler, i.uv).rgb * i.col;
+    float alpha = texSample.a * uOpacity;
 
-    return float4(albedo * lighting, 1.0);
+    return float4(color, alpha);
 }

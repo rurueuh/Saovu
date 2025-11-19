@@ -19,7 +19,10 @@ struct Submesh
     uint32_t indexCount = 0;
 
     DirectX::XMFLOAT3 kd{ 1.f, 1.f, 1.f };
+    DirectX::XMFLOAT3 ks{ 1.f, 1.f, 1.f };
+    DirectX::XMFLOAT3 ke{ 0.f, 0.f, 0.f };
     float shininess = 128.f;
+    float opacity = 1.f;
 
     std::shared_ptr<Texture> texture;
 };

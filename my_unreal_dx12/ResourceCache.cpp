@@ -1,3 +1,6 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include "ResourceCache.h"
 #include "Mesh.h"
 #include "WindowDX12.h"
@@ -6,12 +9,9 @@
 #include <unordered_map>
 #include <DirectXMath.h>
 #include <iostream>
+#include <algorithm>
 
-struct Material {
-    DirectX::XMFLOAT3 Kd{ 1,1,1 };
-    std::string map_Kd;
-    float Ns{ 128.f };
-};
+
 
 static std::string joinPath(const std::string& a, const std::string& b) {
     if (a.empty()) return b;
@@ -38,13 +38,31 @@ static void parseMtlFile(const std::string& mtlPath, std::unordered_map<std::str
         else if (tok == "Kd" && !cur.empty()) {
             iss >> out[cur].Kd.x >> out[cur].Kd.y >> out[cur].Kd.z;
         }
-        else if (tok == "map_Kd" && !cur.empty()) {
-            iss >> out[cur].map_Kd;
+        else if (tok == "Ks" && !cur.empty()) {
+            iss >> out[cur].Ks.x >> out[cur].Ks.y >> out[cur].Ks.z;
+        }
+        else if (tok == "Ke" && !cur.empty()) {
+            iss >> out[cur].Ke.x >> out[cur].Ke.y >> out[cur].Ke.z;
         }
         else if (tok == "Ns" && !cur.empty()) {
             iss >> out[cur].Ns;
             if (out[cur].Ns < 16.0f)   out[cur].Ns = 16.0f;
             if (out[cur].Ns > 256.0f)  out[cur].Ns = 256.0f;
+        }
+        else if (tok == "d" && !cur.empty()) {
+            iss >> out[cur].d;
+            if (out[cur].d < 0.0f) out[cur].d = 0.0f;
+            if (out[cur].d > 1.0f) out[cur].d = 1.0f;
+        }
+        else if (tok == "Tr" && !cur.empty()) {
+            float tr;
+            iss >> tr;
+
+            tr = std::max(0.f, std::min(1.f, tr));
+            out[cur].d = 1.f - tr;
+        }
+        else if (tok == "map_Kd" && !cur.empty()) {
+            iss >> out[cur].map_Kd;
         }
     }
 }
@@ -221,7 +239,10 @@ static void LoadOBJIntoAsset(const std::string& filename, MeshAsset& out, std::s
             sm.indexStart = static_cast<uint32_t>(out.indices.size());
             if (mat) {
                 sm.kd = mat->Kd;
+                sm.ks = mat->Ks;
+                sm.ke = mat->Ke;
                 sm.shininess = mat->Ns;
+                sm.opacity = mat->d;
                 if (auto tex = getMaterialTexture(name))
                     sm.texture = tex;
                 else
@@ -229,7 +250,10 @@ static void LoadOBJIntoAsset(const std::string& filename, MeshAsset& out, std::s
             }
             else {
                 sm.kd = DirectX::XMFLOAT3(1.f, 1.f, 1.f);
+                sm.ks = DirectX::XMFLOAT3(1.f, 1.f, 1.f);
+                sm.ke = DirectX::XMFLOAT3(0.f, 0.f, 0.f);
                 sm.shininess = 128.f;
+                sm.opacity = 1.f;
                 sm.texture = defaultWhite;
             }
             out.submeshes.push_back(sm);
