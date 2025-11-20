@@ -12,7 +12,6 @@ struct Material {
     std::string map_Kd;
     float Ns{ 128.f };
     float d{ 1.f };
-    std::string map_normal;
 };
 
 class ResourceCache {
