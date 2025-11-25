@@ -7,8 +7,19 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 
+/**
+ * @class ImGuiLayer
+ * @brief Manages the ImGui rendering layer.
+ * This class handles the initialization, rendering, and shutdown of ImGui.
+ */
 class ImGuiLayer {
 public:
+    /**
+     * @brief Initializes the ImGui layer.
+     * @param hwnd The window handle.
+     * @param gd The graphics device.
+     * @param sc The swap chain.
+     */
     void Init(HWND hwnd, GraphicsDevice& gd, SwapChain& sc)
     {
         IMGUI_CHECKVERSION();
@@ -39,14 +50,19 @@ public:
         );
     }
 
-
-
+    /**
+     * @brief Starts a new ImGui frame.
+     */
     void NewFrame() {
         ImGui_ImplDX12_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
     }
 
+    /**
+     * @brief Renders the ImGui draw data.
+     * @param cmd The command list to render to.
+     */
     void Render(ID3D12GraphicsCommandList* cmd) {
         ImGui::Render();
         ID3D12DescriptorHeap* heaps[] = { m_heap.Get() };
@@ -54,6 +70,9 @@ public:
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cmd);
     }
 
+    /**
+     * @brief Shuts down the ImGui layer.
+     */
     void Shutdown() {
         ImGui_ImplDX12_Shutdown();
         ImGui_ImplWin32_Shutdown();

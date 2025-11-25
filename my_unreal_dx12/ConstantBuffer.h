@@ -7,6 +7,11 @@
 #include <memory>
 #include <cstring>
 
+/**
+ * @struct SceneCB
+ * @brief Represents the constant buffer data for the scene.
+ * This struct must be 16-byte aligned.
+ */
 struct alignas(16) SceneCB
 {
     DirectX::XMFLOAT4X4 uModel;
@@ -30,9 +35,19 @@ struct alignas(16) SceneCB
 
 static_assert(sizeof(SceneCB) % 16 == 0, "SceneCB must be 16-byte aligned");
 
+/**
+ * @class ConstantBuffer
+ * @brief Manages a constant buffer resource.
+ * This class handles the creation, mapping, and uploading of constant buffer data.
+ */
 class ConstantBuffer
 {
 public:
+    /**
+     * @brief Creates the constant buffer.
+     * @param device The D3D12 device.
+     * @param sliceCount The number of slices in the buffer.
+     */
     void Create(ID3D12Device* device, UINT sliceCount)
     {
         m_sliceSize = Align256(sizeof(SceneCB));
@@ -59,12 +74,22 @@ public:
         DXThrow(m_resource->Map(0, &r, reinterpret_cast<void**>(&m_mapped)));
     }
 
+    /**
+     * @brief Uploads a slice of data to the constant buffer.
+     * @param sliceIndex The index of the slice to upload.
+     * @param data The data to upload.
+     * @return The GPU virtual address of the uploaded slice.
+     */
     D3D12_GPU_VIRTUAL_ADDRESS UploadSlice(UINT sliceIndex, const SceneCB& data)
     {
         std::memcpy(m_mapped + sliceIndex * m_sliceSize, &data, sizeof(data));
         return m_resource->GetGPUVirtualAddress() + sliceIndex * m_sliceSize;
     }
 
+    /**
+     * @brief Gets the size of a single slice in the constant buffer.
+     * @return The size of a slice in bytes.
+     */
     UINT SliceSize() const { return m_sliceSize; }
 
 private:

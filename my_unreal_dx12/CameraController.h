@@ -4,14 +4,35 @@
 #include "Camera.h"
 #include <iostream>
 
+/**
+ * @class CameraController
+ * @brief Manages camera movement and input.
+ * This class handles user input to control the camera's position and orientation.
+ */
 class CameraController {
 public:
     CameraController() {};
 	virtual ~CameraController() {};
 
+    /**
+     * @brief Sets the position of the camera controller.
+     * @param pos The new position.
+     */
     void SetPosition(DirectX::XMFLOAT3 pos) { m_pos = pos; }
+
+    /**
+     * @brief Sets the yaw and pitch of the camera controller.
+     * @param yaw The new yaw in radians.
+     * @param pitch The new pitch in radians.
+     */
     void SetYawPitch(float yaw, float pitch) { m_yaw = yaw; m_pitch = pitch; }
 
+    /**
+     * @brief Updates the camera based on user input.
+     * @param dt The time delta since the last update.
+     * @param cam The camera to update.
+     * @param aspect The aspect ratio of the viewport.
+     */
     void Update(float dt, Camera& cam, float aspect) {
         using namespace DirectX;
 
@@ -59,13 +80,55 @@ public:
         cam.SetPerspective(m_fov, aspect, m_nearZ, m_farZ);
     }
 
+    /**
+     * @brief Sets the movement speeds of the camera.
+     * @param normal The normal movement speed.
+     * @param fast The fast movement speed (when holding shift).
+     */
     void SetMoveSpeeds(float normal, float fast) { m_moveSpeed = normal; m_moveSpeedFast = fast; }
+
+	/**
+	 * @brief Gets the normal movement speed of the camera.
+	 * @return The normal movement speed.
+	 */
 	float &GetMoveSpeed() { return m_moveSpeed; }
+
+    /**
+     * @brief Sets the mouse sensitivity.
+     * @param sens The new mouse sensitivity.
+     */
     void SetMouseSensitivity(float sens) { m_sens = sens; }
+
+	/**
+	 * @brief Gets the mouse sensitivity.
+	 * @return The mouse sensitivity.
+	 */
 	float GetMouseSensitivity() const { return m_sens; }
+
+    /**
+     * @brief Sets the projection parameters.
+     * @param fov The field of view in radians.
+     * @param zn The near clipping plane.
+     * @param zf The far clipping plane.
+     */
     void SetProj(float fov, float zn, float zf) { m_fov = fov; m_nearZ = zn; m_farZ = zf; }
+
+	/**
+	 * @brief Gets the field of view.
+	 * @return The field of view in radians.
+	 */
 	float GetFov() const { return m_fov; }
+
+	/**
+	 * @brief Gets the near clipping plane distance.
+	 * @return The near clipping plane distance.
+	 */
 	float getNearZ() const { return m_nearZ; }
+
+	/**
+	 * @brief Gets the far clipping plane distance.
+	 * @return The far clipping plane distance.
+	 */
 	float getFarZ() const { return m_farZ; }
 
 private:
