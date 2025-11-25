@@ -4,20 +4,10 @@
 #include "Utils.h"
 #include "GraphicsDevice.h"
 
-/**
- * @class DepthBuffer
- * @brief Manages a depth buffer resource.
- * This class handles the creation, resizing, and descriptor heap for a depth buffer.
- */
+
 class DepthBuffer
 {
 public:
-	/**
-	 * @brief Creates the depth buffer.
-	 * @param gd The graphics device.
-	 * @param width The width of the depth buffer.
-	 * @param height The height of the depth buffer.
-	 */
 	void Create(GraphicsDevice& gd, UINT width, UINT height)
 	{
 		D3D12_RESOURCE_DESC d{};
@@ -47,22 +37,14 @@ public:
 		gd.Device()->CreateDepthStencilView(m_tex.Get(), &dsv, m_heap->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	/**
-	 * @brief Resizes the depth buffer.
-	 * @param gd The graphics device.
-	 * @param width The new width.
-	 * @param height The new height.
-	 */
+
 	void Resize(GraphicsDevice& gd, UINT width, UINT height)
 	{
 		m_tex.Reset();
 		Create(gd, width, height);
 	}
 
-	/**
-	 * @brief Gets the depth stencil view descriptor handle.
-	 * @return The CPU descriptor handle for the depth stencil view.
-	 */
+
 	D3D12_CPU_DESCRIPTOR_HANDLE DSV() const { return m_heap->GetCPUDescriptorHandleForHeapStart(); }
 
 

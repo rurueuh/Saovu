@@ -11,11 +11,6 @@
 
 inline constexpr uint32_t kSwapBufferCount = 2;
 
-/**
- * @brief Throws an exception if the HRESULT is a failure.
- * In debug builds, this will trigger an assertion. In release builds, it will exit the process.
- * @param hr The HRESULT to check.
- */
 static inline void DXThrow(HRESULT hr)
 {
 	if (FAILED(hr)) {
@@ -24,22 +19,12 @@ static inline void DXThrow(HRESULT hr)
 	}
 }
 
-/**
- * @brief Aligns a size to 256 bytes.
- * @param size The size to align.
- * @return The aligned size.
- */
 inline UINT Align256(UINT size)
 {
 	return (size + 255u) & ~255u;
 }
 
 using namespace DirectX;
-/**
- * @brief Converts a quaternion to Euler angles in radians.
- * @param q The quaternion to convert.
- * @return An XMFLOAT3 containing the roll, pitch, and yaw in radians.
- */
 inline XMFLOAT3 XMQuaternionToEulerRad(FXMVECTOR q)
 {
     XMFLOAT4 v; XMStoreFloat4(&v, q);
