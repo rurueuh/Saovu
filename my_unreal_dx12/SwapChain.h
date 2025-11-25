@@ -5,9 +5,20 @@
 #include "Utils.h"
 #include "GraphicsDevice.h"
 
+/**
+ * @class SwapChain
+ * @brief Manages the swap chain and back buffers.
+ */
 class SwapChain
 {
 public:
+    /**
+     * @brief Creates the swap chain.
+     * @param gd The graphics device.
+     * @param hwnd The window handle.
+     * @param width The width of the swap chain.
+     * @param height The height of the swap chain.
+     */
     void Create(GraphicsDevice& gd, HWND hwnd, UINT width, UINT height)
     {
         m_width = width; m_height = height;
@@ -41,6 +52,12 @@ public:
         }
     }
 
+    /**
+     * @brief Resizes the swap chain.
+     * @param gd The graphics device.
+     * @param width The new width.
+     * @param height The new height.
+     */
     void Resize(GraphicsDevice& gd, UINT width, UINT height)
     {
         if (width == 0 || height == 0) return; // minimized
@@ -57,17 +74,56 @@ public:
         }
     }
 
+    /**
+     * @brief Gets the underlying IDXGISwapChain3 object.
+     * @return A pointer to the swap chain.
+     */
     IDXGISwapChain3* Swap() const { return m_swapchain.Get(); }
+
+    /**
+     * @brief Gets a specific back buffer.
+     * @param i The index of the back buffer.
+     * @return A pointer to the back buffer resource.
+     */
     ID3D12Resource* BackBuffer(UINT i) const { return m_backBuffers[i].Get(); }
+
+    /**
+     * @brief Gets the CPU descriptor handle for the current render target view.
+     * @return The D3D12_CPU_DESCRIPTOR_HANDLE for the current RTV.
+     */
     D3D12_CPU_DESCRIPTOR_HANDLE CurrentRTV() const
     {
         auto h = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
         h.ptr += m_frameIndex * m_rtvStride; return h;
     }
+
+    /**
+     * @brief Gets the width of the swap chain.
+     * @return The width.
+     */
     UINT  Width() const { return m_width; }
+
+    /**
+     * @brief Gets the height of the swap chain.
+     * @return The height.
+     */
     UINT  Height() const { return m_height; }
+
+    /**
+     * @brief Gets the current frame index.
+     * @return The frame index.
+     */
     UINT  FrameIndex() const { return m_frameIndex; }
+
+    /**
+     * @brief Updates the frame index to the current back buffer index.
+     */
     void  UpdateFrameIndex() { m_frameIndex = m_swapchain->GetCurrentBackBufferIndex(); }
+
+    /**
+     * @brief Gets the number of buffers in the swap chain.
+     * @return The buffer count.
+     */
     UINT BufferCount() const { return kSwapBufferCount; }
 
 private:

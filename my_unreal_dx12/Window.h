@@ -7,13 +7,23 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
-
+/**
+ * @class Window
+ * @brief Manages a Win32 window.
+ * This class handles window creation, message pumping, and resizing.
+ */
 class Window
 {
 public:
 	Window() = default;
 
-
+	/**
+	 * @brief Creates a new window.
+	 * @param title The title of the window.
+	 * @param width The width of the window.
+	 * @param height The height of the window.
+	 * @return True if the window was created successfully, false otherwise.
+	 */
 	bool Create(const std::wstring& title, UINT width, UINT height)
 	{
 		m_width = width;
@@ -49,17 +59,29 @@ public:
 		return true;
 	}
 
+	/**
+	 * @brief Sets the title of the window.
+	 * @param title The new title.
+	 */
 	void SetTitle(const std::wstring& title)
 	{
 		SetWindowTextW(m_hwnd, title.c_str());
 	}
 
+	/**
+	 * @brief Sets the size of the window.
+	 * @param width The new width.
+	 * @param height The new height.
+	 */
 	void SetSize(UINT width, UINT height)
 	{
 		SetWindowPos(m_hwnd, nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
 	}
 
-
+	/**
+	 * @brief Pumps the window message loop.
+	 * @return False if the window should be closed, true otherwise.
+	 */
 	bool PumpMessages()
 	{
 		MSG msg;
@@ -72,12 +94,28 @@ public:
 		return true;
 	}
 
-
+	/**
+	 * @brief Gets the window handle.
+	 * @return The HWND of the window.
+	 */
 	HWND GetHwnd() const { return m_hwnd; }
+
+	/**
+	 * @brief Gets the width of the window.
+	 * @return The width of the window in pixels.
+	 */
 	UINT GetWidth() const { return m_width; }
+
+	/**
+	 * @brief Gets the height of the window.
+	 * @return The height of the window in pixels.
+	 */
 	UINT GetHeight()const { return m_height; }
 
-
+	/**
+	 * @brief Checks if the window was resized.
+	 * @return True if the window was resized since the last call to this method, false otherwise.
+	 */
 	bool WasResized()
 	{
 		bool r = m_resized; m_resized = false; return r;

@@ -9,9 +9,20 @@
 #include "Mesh.h"
 #include "ShadowMap.h"
 
+/**
+ * @class Renderer
+ * @brief Manages the rendering process.
+ * This class handles the setup of rendering passes, drawing meshes, and managing the frame.
+ */
 class Renderer
 {
 public:
+    /**
+     * @brief Initializes the renderer.
+     * @param gd The graphics device.
+     * @param sc The swap chain.
+     * @param db The depth buffer.
+     */
     void Initialize(GraphicsDevice& gd, SwapChain& sc, DepthBuffer& db)
     {
         m_gd = &gd; m_sc = &sc; m_db = &db;
@@ -20,11 +31,20 @@ public:
         m_scissor = { 0, 0, static_cast<LONG>(sc.Width()), static_cast<LONG>(sc.Height()) };
     }
 
+    /**
+     * @brief Sets the current shader pipeline.
+     * @param pipe The shader pipeline to use.
+     */
     void SetPipeline(const ShaderPipeline& pipe)
     {
         m_pipe = &pipe;
     }
 
+    /**
+     * @brief Begins the shadow rendering pass.
+     * @param sm The shadow map to render to.
+     * @param pipe The shader pipeline for the shadow pass.
+     */
     void BeginShadowPass(ShadowMap& sm, const ShaderPipeline& pipe)
     {
         ID3D12GraphicsCommandList* cmd = m_cmd.Get();
@@ -49,6 +69,10 @@ public:
         cmd->SetPipelineState(pipe.PSO());
     }
 
+    /**
+     * @brief Ends the shadow rendering pass.
+     * @param sm The shadow map that was rendered to.
+     */
     void EndShadowPass(ShadowMap& sm)
     {
         ID3D12GraphicsCommandList* cmd = m_cmd.Get();
@@ -63,6 +87,10 @@ public:
         cmd->ResourceBarrier(1, &b);
     }
 
+    /**
+     * @brief Begins a new frame.
+     * @param frameIndex The current frame index.
+     */
     void BeginFrame(UINT frameIndex)
     {
         m_cmd.Begin(frameIndex);
@@ -89,6 +117,15 @@ public:
         m_cmd.Get()->SetPipelineState(m_pipe->PSO());
     }
 
+    /**
+     * @brief Draws a mesh.
+     * @param mesh The mesh to draw.
+     * @param cbAddr The GPU virtual address of the constant buffer.
+     * @param texHandle The GPU descriptor handle for the texture.
+     * @param shadowHandle The GPU descriptor handle for the shadow map.
+     * @param normalHandle The GPU descriptor handle for the normal map.
+     * @param metalRoughHandle The GPU descriptor handle for the metallic-roughness map.
+     */
     void DrawMesh(const Mesh& mesh,
         D3D12_GPU_VIRTUAL_ADDRESS cbAddr,
         D3D12_GPU_DESCRIPTOR_HANDLE texHandle,
@@ -97,6 +134,17 @@ public:
         D3D12_GPU_DESCRIPTOR_HANDLE metalRoughHandle
     );
 
+    /**
+     * @brief Draws a range of indices from a mesh.
+     * @param mesh The mesh to draw.
+     * @param cbAddr The GPU virtual address of the constant buffer.
+     * @param texHandle The GPU descriptor handle for the texture.
+     * @param shadowHandle The GPU descriptor handle for the shadow map.
+     * @param normalHandle The GPU descriptor handle for the normal map.
+     * @param metalRoughHandle The GPU descriptor handle for the metallic-roughness map.
+     * @param indexStart The starting index.
+     * @param indexCount The number of indices to draw.
+     */
     void DrawMeshRange(const Mesh& mesh,
         D3D12_GPU_VIRTUAL_ADDRESS cbAddr,
         D3D12_GPU_DESCRIPTOR_HANDLE texHandle,
@@ -107,6 +155,11 @@ public:
         UINT indexCount
     );
 
+    /**
+     * @brief Draws a mesh to the shadow map.
+     * @param mesh The mesh to draw.
+     * @param cbAddr The GPU virtual address of the constant buffer.
+     */
     void DrawMeshShadow(const Mesh& mesh, D3D12_GPU_VIRTUAL_ADDRESS cbAddr)
     {
         ID3D12GraphicsCommandList* cmd = m_cmd.Get();
@@ -119,6 +172,10 @@ public:
         cmd->DrawIndexedInstanced(mesh.IndexCount(), 1, 0, 0, 0);
     }
 
+    /**
+     * @brief Ends the current frame.
+     * @param frameIndex The current frame index.
+     */
     void EndFrame(UINT frameIndex)
     {
         D3D12_RESOURCE_BARRIER b{};
@@ -137,6 +194,9 @@ public:
         m_sc->UpdateFrameIndex();
     }
 
+    /**
+     * @brief Binds the main render targets.
+     */
     void BindMainRenderTargets()
     {
         ID3D12GraphicsCommandList* cmd = m_cmd.Get();
@@ -155,12 +215,21 @@ public:
         }
     }
 
+    /**
+     * @brief Handles window resize events.
+     * @param newW The new width.
+     * @param newH The new height.
+     */
     void OnResize(UINT newW, UINT newH)
     {
         m_viewport = { 0, 0, static_cast<float>(newW), static_cast<float>(newH), 0.0f, 1.0f };
         m_scissor = { 0, 0, static_cast<LONG>(newW), static_cast<LONG>(newH) };
     }
 
+    /**
+     * @brief Gets the command list.
+     * @return A pointer to the ID3D12GraphicsCommandList.
+     */
     ID3D12GraphicsCommandList* GetCommandList() { return m_cmd.Get(); }
 
 private:

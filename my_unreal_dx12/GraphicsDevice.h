@@ -10,6 +10,12 @@
 
 using Microsoft::WRL::ComPtr;
 
+/**
+ * @class GraphicsDevice
+ * @brief Manages the D3D12 device, command queue, and fences.
+ * This class is responsible for initializing the Direct3D 12 device,
+ * picking the appropriate adapter, and managing GPU synchronization.
+ */
 class GraphicsDevice {
 public:
     GraphicsDevice() = default;
@@ -18,6 +24,9 @@ public:
     GraphicsDevice(GraphicsDevice&&) = default;
     GraphicsDevice& operator=(GraphicsDevice&&) = default;
 
+    /**
+     * @brief Destructor that waits for the GPU to finish its work.
+     */
     ~GraphicsDevice() noexcept {
         if (m_queue && m_fence) {
             try { WaitGPU(); }
@@ -25,6 +34,11 @@ public:
         }
     }
 
+    /**
+     * @brief Initializes the graphics device.
+     * This method creates the DXGI factory, picks an adapter, creates the D3D12 device,
+     * and sets up the command queue and fence.
+     */
     void Initialize() {
 #if defined(_DEBUG)
         if (ComPtr<ID3D12Debug> dbg; SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg)))) {
@@ -69,10 +83,28 @@ public:
         if (!m_fenceEvent) throw std::runtime_error("CreateEventEx failed");
     }
 
+    /**
+     * @brief Gets the DXGI factory.
+     * @return A pointer to the IDXGIFactory7 interface.
+     */
     IDXGIFactory7* Factory() const noexcept { return m_factory.Get(); }
+
+    /**
+     * @brief Gets the D3D12 device.
+     * @return A pointer to the ID3D12Device interface.
+     */
     ID3D12Device* Device()  const noexcept { return m_device.Get(); }
+
+    /**
+     * @brief Gets the command queue.
+     * @return A pointer to the ID3D12CommandQueue interface.
+     */
     ID3D12CommandQueue* Queue()   const noexcept { return m_queue.Get(); }
 
+    /**
+     * @brief Waits for the GPU to finish processing all submitted commands.
+     * This method signals the fence and waits for the GPU to complete the work.
+     */
     void WaitGPU() {
         const UINT64 v = ++m_fenceValue;
         DXThrow(m_queue->Signal(m_fence.Get(), v));

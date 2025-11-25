@@ -9,9 +9,26 @@
 
 using Microsoft::WRL::ComPtr;
 
+/**
+ * @class ShaderPipeline
+ * @brief Manages a shader pipeline, including root signature, shaders, and pipeline state objects.
+ */
 class ShaderPipeline
 {
 public:
+    /**
+     * @brief Creates the shader pipeline.
+     * @param device The D3D12 device.
+     * @param inputLayout An array of input element descriptions.
+     * @param inputCount The number of input elements.
+     * @param vsSource The source code for the vertex shader.
+     * @param psSource The source code for the pixel shader.
+     * @param rtvFormat The format of the render target view.
+     * @param dsvFormat The format of the depth stencil view.
+     * @param enableBlend Whether to enable blending.
+     * @param depthWrite Whether to enable depth writing.
+     * @param cull The cull mode.
+     */
     void Create(ID3D12Device* device,
         const D3D12_INPUT_ELEMENT_DESC* inputLayout, UINT inputCount,
         const char* vsSource, const char* psSource,
@@ -180,11 +197,18 @@ public:
 
     }
 
+    /**
+     * @brief Enables or disables wireframe rendering.
+     * @param enable True to enable wireframe, false to disable.
+     */
     void setWireframe(bool enable)
     {
         m_psoCurrent = enable ? m_psoWire : m_psoSolid;
     }
 
+    /**
+     * @brief Destroys the shader pipeline and releases all resources.
+     */
     void Destroy()
     {
         m_psoSolid.Reset();
@@ -200,7 +224,16 @@ public:
         device = nullptr;
 	}
 
+    /**
+     * @brief Gets the current pipeline state object.
+     * @return A pointer to the ID3D12PipelineState.
+     */
     ID3D12PipelineState* PSO()  const { return m_psoCurrent.Get(); }
+
+    /**
+     * @brief Gets the root signature.
+     * @return A pointer to the ID3D12RootSignature.
+     */
     ID3D12RootSignature* Root() const { return m_root.Get(); }
 
 private:
