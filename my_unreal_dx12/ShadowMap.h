@@ -3,9 +3,21 @@
 #include <wrl.h>
 #include <stdexcept>
 
+/**
+ * @class ShadowMap
+ * @brief Manages a shadow map texture and associated resources.
+ */
 class ShadowMap
 {
 public:
+    /**
+     * @brief Initializes the shadow map.
+     * @param device The D3D12 device.
+     * @param width The width of the shadow map.
+     * @param height The height of the shadow map.
+     * @param srvCpu The CPU descriptor handle for the shader resource view.
+     * @param srvGpu The GPU descriptor handle for the shader resource view.
+     */
     void Initialize(ID3D12Device* device,
         UINT width, UINT height,
         D3D12_CPU_DESCRIPTOR_HANDLE srvCpu,
@@ -102,13 +114,34 @@ public:
         m_scissor.bottom = static_cast<LONG>(height);
     }
 
+    /**
+     * @brief Gets the shadow map resource.
+     * @return A pointer to the ID3D12Resource.
+     */
     ID3D12Resource* Resource() const { return m_tex.Get(); }
 
+    /**
+     * @brief Gets the depth stencil view CPU descriptor handle.
+     * @return The D3D12_CPU_DESCRIPTOR_HANDLE for the DSV.
+     */
     D3D12_CPU_DESCRIPTOR_HANDLE DSV() const { return m_dsvCPU; }
 
+    /**
+     * @brief Gets the shader resource view GPU descriptor handle.
+     * @return The D3D12_GPU_DESCRIPTOR_HANDLE for the SRV.
+     */
     D3D12_GPU_DESCRIPTOR_HANDLE SRVGPU() const { return m_srvGPU; }
 
+    /**
+     * @brief Gets the viewport for the shadow map.
+     * @return The D3D12_VIEWPORT.
+     */
     const D3D12_VIEWPORT& Viewport() const { return m_viewport; }
+
+    /**
+     * @brief Gets the scissor rectangle for the shadow map.
+     * @return The D3D12_RECT.
+     */
     const D3D12_RECT& Scissor()  const { return m_scissor; }
 
 private:

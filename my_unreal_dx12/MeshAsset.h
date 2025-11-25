@@ -6,6 +6,10 @@
 #include <DirectXMath.h>
 #include "Texture.h"
 
+/**
+ * @struct Vertex
+ * @brief Represents a vertex in a mesh.
+ */
 struct Vertex {
     float px, py, pz;
     float nx, ny, nz;
@@ -15,6 +19,10 @@ struct Vertex {
     float bx, by, bz;
 };
 
+/**
+ * @struct Submesh
+ * @brief Represents a submesh of a mesh asset.
+ */
 struct Submesh
 {
     uint32_t indexStart = 0;
@@ -34,6 +42,11 @@ struct Submesh
     bool hasMetalRoughMap = false;
 };
 
+/**
+ * @class MeshAsset
+ * @brief Represents the raw data of a mesh.
+ * This class stores the vertices, indices, and material properties of a mesh.
+ */
 class MeshAsset
 {
 public:
@@ -51,7 +64,15 @@ public:
 
     std::vector<Submesh> submeshes;
 
+	/**
+	 * @brief Sets the shininess of the mesh asset.
+	 * @param s The new shininess value.
+	 */
 	void setShininess(float s) { shininess = s; }
 
+    /**
+     * @brief Uploads the mesh data to the GPU.
+     * @param device The D3D12 device.
+     */
     void Upload(ID3D12Device* device);
 };
